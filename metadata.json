@@ -1,0 +1,5 @@
+{
+  "name": "Coltefinanciera Customer Satisfaction Analytics",
+  "description": "A web application to visualize and analyze customer satisfaction statistics for Coltefinanciera, providing insights into ratings, trends, and departmental performance.",
+  "requestFramePermissions": []
+}
