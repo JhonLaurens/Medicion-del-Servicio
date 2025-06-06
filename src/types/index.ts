@@ -59,6 +59,7 @@ export interface GeographicData {
 export interface SuggestionData {
   categoria: string;
   porcentaje: number;
+  count?: number;
   detalles?: Array<{
     sugerencia: string;
     porcentaje: number;

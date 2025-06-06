@@ -106,10 +106,19 @@ const ManagerParticipationReport: React.FC = () => {
       other: otherEmpresarialManagers.length
     });
   };
-
   // Use real data from CSV processing
   const { personasManagers, bogotaManagers, medellinManagers, otherEmpresarialManagers } = managerData;
   const allManagers = [...personasManagers, ...bogotaManagers, ...medellinManagers, ...otherEmpresarialManagers];
+
+  // Log para debug
+  console.log('🔍 ManagerParticipationReport Debug:', {
+    personasCount: personasManagers.length,
+    bogotaCount: bogotaManagers.length,
+    medellinCount: medellinManagers.length,
+    otherCount: otherEmpresarialManagers.length,
+    allManagersCount: allManagers.length,
+    firstManager: allManagers[0]
+  });
 
   const getFilteredData = () => {
     switch (selectedCategory) {
@@ -124,12 +133,18 @@ const ManagerParticipationReport: React.FC = () => {
   const totalSurveys = 1445; // Total real validado (1,432 PERSONAS + 13 EMPRESARIAL)
   const totalManagers = 29; // Total de gerentes/categorías únicas validadas
   const activeManagers = 24; // Gerentes que tienen al menos 1 encuesta
-
   // Top 10 gerentes por número de encuestas (con datos reales)
   const topManagers = allManagers
     .filter(manager => manager.surveys > 0)
     .sort((a, b) => b.surveys - a.surveys)
     .slice(0, 10);
+
+  // Enhanced debugging for chart
+  console.log('📊 Chart Debug - topManagers:', {
+    count: topManagers.length,
+    data: topManagers,
+    firstFive: topManagers.slice(0, 5).map(m => ({name: m.name, surveys: m.surveys}))
+  });
 
   // Preparar datos para visualización por segmentos
   const categoryData = [
@@ -260,7 +275,7 @@ const ManagerParticipationReport: React.FC = () => {
                   </div>                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="h-2 rounded-full transition-all duration-500 bg-blue-600"
-                      style={{ width: `${Math.max(percentage, 1)}%` } as React.CSSProperties}
+                      style={{ width: `${Math.max(percentage, 1)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -275,27 +290,35 @@ const ManagerParticipationReport: React.FC = () => {
               390 PERSONAS vs 4 EMPRESARIAL (98.98% de concentración en PERSONAS).
             </p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        </div>        <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Top 10 Gerentes por Encuestas</h2>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={topManagers} layout="horizontal" margin={{ left: 120 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                width={120}
-                tick={{ fontSize: 10 }}
-              />
-              <Tooltip 
-                formatter={(value: any) => [value, 'Encuestas']}
-                labelFormatter={(label: string) => `Gerente: ${label}`}
-              />
-              <Bar dataKey="surveys" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
+          {topManagers.length > 0 ? (
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={topManagers} layout="horizontal" margin={{ left: 120 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={120}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip 
+                  formatter={(value: any) => [value, 'Encuestas']}
+                  labelFormatter={(label: string) => `Gerente: ${label}`}
+                />
+                <Bar dataKey="surveys" fill="#3B82F6" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <div className="text-2xl mb-2">📊</div>
+                <div>Cargando datos del gráfico...</div>
+                <div className="text-sm mt-2">Gerentes encontrados: {allManagers.length}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

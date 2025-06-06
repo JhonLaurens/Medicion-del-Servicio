@@ -1,5 +1,11 @@
+import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData } from '../types';
 import Papa from 'papaparse';
-import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData } from '../types';
+
+interface DepartmentPerformanceData {
+  department: string;
+  averageRating: number;
+  responseCount: number;
+}
 
 const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
 
@@ -13,16 +19,21 @@ export class SatisfactionDataService {
       }
       return this.data;
     }
+    
     if (isDev) {
       console.log('🚀 DataService: Starting data load process...');
     }
+    
     try {
       const response = await fetch('/datos.csv');
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const csvText = await response.text();
+      
       if (isDev) {
         console.log('✅ DataService: CSV file fetched. Length:', csvText.length);
-      }      // Header mapping - matching exact CSV headers
+      }
+
+      // Header mapping - matching exact CSV headers
       const headerMap: Record<string, string> = {
         'En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?': 'claridad_informacion',
         '¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?': 'recomendacion',
@@ -34,12 +45,15 @@ export class SatisfactionDataService {
         'EJECUTIVO': 'EJECUTIVO',
         'EJECUTIVO_FINAL': 'EJECUTIVO_FINAL'
       };
+
       const metricFields = [
         'claridad_informacion',
         'recomendacion',
         'satisfaccion_general',
         'lealtad'
-      ];      const parsed = Papa.parse(csvText, {
+      ];
+
+      const parsed = Papa.parse(csvText, {
         header: true,
         delimiter: ';',
         skipEmptyLines: true,
@@ -63,7 +77,9 @@ export class SatisfactionDataService {
       if (isDev) {
         console.log('📋 DataService: Parsed headers:', Object.keys(parsed.data[0] || {}));
         console.log('📊 DataService: Total parsed rows:', parsed.data.length);
-      }      // Filtrar registros válidos
+      }
+
+      // Filtrar registros válidos
       const filteredData = (parsed.data as any[]).filter(row => {
         const hasId = row.ID && row.ID.trim() !== '';
         const hasSegmento = row.SEGMENTO && row.SEGMENTO.trim() !== '';
@@ -95,18 +111,47 @@ export class SatisfactionDataService {
   }
 
   getTechnicalInfo(): TechnicalInfo {
+    // Calcular fechas reales desde el CSV
+    const dates = this.data
+      .map(record => new Date(record.DATE_MODIFIED))
+      .filter(date => !isNaN(date.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const startDate = dates.length > 0 ? dates[0] : new Date();
+    const endDate = dates.length > 0 ? dates[dates.length - 1] : new Date();
+    
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    };
+    
+    const universoTotal = 24067;
+    const totalEncuestados = this.data.length;
+    const porcentajeRespuesta = parseFloat(((totalEncuestados / universoTotal) * 100).toFixed(2));
+    
+    // Calcular margen de error con fórmula estadística
+    // ME = Z * √(p(1-p)/n) donde Z=1.96 para 95% confianza, p=0.5 para máxima varianza
+    const z = 1.96; // 95% confianza
+    const p = 0.5; // proporción estimada (0.5 para máxima varianza)
+    const n = totalEncuestados;
+    const margenError = z * Math.sqrt((p * (1 - p)) / n);
+    const margenErrorPorcentaje = (margenError * 100).toFixed(2);
+    
     return {
       objetivoGeneral: "Conocer la satisfacción de los clientes de los segmentos Personas y Empresas con el servicio de Coltefinanciera",
-      universoTotal: 24067,
-      totalEncuestados: this.data.length,
-      porcentajeRespuesta: parseFloat(((this.data.length / 24067) * 100).toFixed(2)),
+      universoTotal,
+      totalEncuestados,
+      porcentajeRespuesta,
       nivelConfianza: "95%",
-      margenError: "0,48%",
-      periodoCampo: "03 de enero al 17 de julio de 2024",
+      margenError: `${margenErrorPorcentaje}%`,
+      periodoCampo: `${formatDate(startDate)} al ${formatDate(endDate)}`,
       metodoRecoleccion: "Web, mediante SurveyMonkey",
       metricasEvaluadas: [
         "Claridad de la Información (Atención)",
-        "Satisfacción General",
+        "Satisfacción General", 
         "Nivel de Recomendación",
         "Lealtad del Cliente"
       ]
@@ -115,15 +160,17 @@ export class SatisfactionDataService {
 
   getKPIData(): KPIData[] {
     const metrics = [
+      { key: 'claridad_informacion', name: 'Claridad de la Información (Atención)' },
       { key: 'satisfaccion_general', name: 'Satisfacción General' },
-      { key: 'lealtad', name: 'Lealtad' },
-      { key: 'recomendacion', name: 'Recomendación' }
+      { key: 'recomendacion', name: 'Nivel de Recomendación' },
+      { key: 'lealtad', name: 'Lealtad del Cliente' }
     ];
-    const metricFields = ['satisfaccion_general', 'lealtad', 'recomendacion'];
+    
     return metrics.map(metric => {
       const allData = this.data.filter(d => d[metric.key as keyof SatisfactionRecord] !== null && d[metric.key as keyof SatisfactionRecord] !== undefined);
       const personasData = allData.filter(d => d.SEGMENTO === 'PERSONAS');
       const empresarialData = allData.filter(d => d.SEGMENTO === 'EMPRESARIAL');
+      
       const calculateStats = (data: SatisfactionRecord[], metricKey: string) => {
         if (data.length === 0) return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
         const values = data.map(d => d[metricKey as keyof SatisfactionRecord] as number).filter(v => v !== null && v !== undefined);
@@ -133,6 +180,7 @@ export class SatisfactionDataService {
         const rating123 = parseFloat(((values.filter(v => v <= 3).length / values.length) * 100).toFixed(1));
         return { average, rating5, rating4, rating123 };
       };
+      
       return {
         metric: metric.name,
         consolidado: calculateStats(allData, metric.key),
@@ -143,81 +191,145 @@ export class SatisfactionDataService {
   }
 
   getCityData(): GeographicData[] {
-    const cityMap: { [key: string]: string } = {
-      'BOGOTA PRINCIPAL': 'Bogotá',
-      'BOGOTA EL NOGAL': 'Bogotá',
-      'BOGOTA SANTA FE': 'Bogotá',
-      'BOGOTA PLAZA IMPERIAL': 'Bogotá',
-      'COLTEJER PRINCIPAL': 'Medellín',
-      'OVIEDO': 'Medellín',
-      'SAN DIEGO': 'Medellín',
-      'UNICENTRO': 'Medellín',
-      'CALI NORTE': 'Cali',
-      'CUCUTA': 'Cúcuta',
-      'MANIZALES': 'Manizales',
-      'AGENCIA PRESTIGE': 'Barranquilla'
-    };
-    const cityGroups = this.data.reduce((acc, record) => {
-      const city = cityMap[record.AGENCIA] || 'Otras';
-      if (!acc[city]) acc[city] = [];
-      acc[city].push(record);
-      return acc;
-    }, {} as { [key: string]: SatisfactionRecord[] });
+    // Obtener todas las ciudades únicas del CSV
+    const ciudadesUnicas = [...new Set(this.data.map(record => record.CIUDAD))].filter(ciudad => ciudad && ciudad.trim());
+    
     const nationalAverages = {
       claridad_informacion: this.calculateAverage('claridad_informacion'),
       satisfaccion_general: this.calculateAverage('satisfaccion_general'),
       recomendacion: this.calculateAverage('recomendacion'),
       lealtad: this.calculateAverage('lealtad')
     };
-    return Object.entries(cityGroups).map(([ciudad, records]) => {
-      const metricas = {
-        claridad_informacion: this.calculateAverageForRecords(records, 'claridad_informacion'),
-        satisfaccion_general: this.calculateAverageForRecords(records, 'satisfaccion_general'),
-        recomendacion: this.calculateAverageForRecords(records, 'recomendacion'),
-        lealtad: this.calculateAverageForRecords(records, 'lealtad')
+    
+    return ciudadesUnicas.map(ciudad => {
+      const cityData = this.data.filter(record => record.CIUDAD === ciudad);
+      const cityStats = {
+        claridad_informacion: this.calculateAverageForRecords(cityData, 'claridad_informacion'),
+        satisfaccion_general: this.calculateAverageForRecords(cityData, 'satisfaccion_general'),
+        recomendacion: this.calculateAverageForRecords(cityData, 'recomendacion'),
+        lealtad: this.calculateAverageForRecords(cityData, 'lealtad')
       };
-      const comparison = {
-        claridad_informacion: this.compareToNational(metricas.claridad_informacion, nationalAverages.claridad_informacion),
-        satisfaccion_general: this.compareToNational(metricas.satisfaccion_general, nationalAverages.satisfaccion_general),
-        recomendacion: this.compareToNational(metricas.recomendacion, nationalAverages.recomendacion),
-        lealtad: this.compareToNational(metricas.lealtad, nationalAverages.lealtad)
-      };
+      
       return {
-        ciudad,
-        total_encuestados: records.length,
-        metricas,
-        comparison
+        ciudad: ciudad,
+        total_encuestados: cityData.length,
+        metricas: {
+          claridad_informacion: cityStats.claridad_informacion,
+          satisfaccion_general: cityStats.satisfaccion_general,
+          recomendacion: cityStats.recomendacion,
+          lealtad: cityStats.lealtad
+        },
+        comparison: {
+          claridad_informacion: this.compareToNational(cityStats.claridad_informacion, nationalAverages.claridad_informacion),
+          satisfaccion_general: this.compareToNational(cityStats.satisfaccion_general, nationalAverages.satisfaccion_general),
+          recomendacion: this.compareToNational(cityStats.recomendacion, nationalAverages.recomendacion),
+          lealtad: this.compareToNational(cityStats.lealtad, nationalAverages.lealtad)
+        }
       };
-    });
+    }).sort((a, b) => b.total_encuestados - a.total_encuestados);
+  }
+
+  getAgencyData(): GeographicData[] {
+    // Obtener todas las agencias únicas del CSV
+    const agenciasUnicas = [...new Set(this.data.map(record => record.AGENCIA))].filter(agencia => agencia && agencia.trim());
+    
+    const nationalAverages = {
+      claridad_informacion: this.calculateAverage('claridad_informacion'),
+      satisfaccion_general: this.calculateAverage('satisfaccion_general'),
+      recomendacion: this.calculateAverage('recomendacion'),
+      lealtad: this.calculateAverage('lealtad')
+    };
+    
+    return agenciasUnicas.map(agencia => {
+      const agencyData = this.data.filter(record => record.AGENCIA === agencia);
+      const agencyStats = {
+        claridad_informacion: this.calculateAverageForRecords(agencyData, 'claridad_informacion'),
+        satisfaccion_general: this.calculateAverageForRecords(agencyData, 'satisfaccion_general'),
+        recomendacion: this.calculateAverageForRecords(agencyData, 'recomendacion'),
+        lealtad: this.calculateAverageForRecords(agencyData, 'lealtad')
+      };
+      
+      return {
+        ciudad: agencia, // Usamos ciudad como campo genérico para mostrar el nombre de la agencia
+        total_encuestados: agencyData.length,
+        metricas: {
+          claridad_informacion: agencyStats.claridad_informacion,
+          satisfaccion_general: agencyStats.satisfaccion_general,
+          recomendacion: agencyStats.recomendacion,
+          lealtad: agencyStats.lealtad
+        },
+        comparison: {
+          claridad_informacion: this.compareToNational(agencyStats.claridad_informacion, nationalAverages.claridad_informacion),
+          satisfaccion_general: this.compareToNational(agencyStats.satisfaccion_general, nationalAverages.satisfaccion_general),
+          recomendacion: this.compareToNational(agencyStats.recomendacion, nationalAverages.recomendacion),
+          lealtad: this.compareToNational(agencyStats.lealtad, nationalAverages.lealtad)
+        }
+      };
+    }).sort((a, b) => b.total_encuestados - a.total_encuestados);
   }
 
   getSuggestionData(): SuggestionData[] {
-    // Data de ejemplo basada en el PDF
-    return [
-      {
-        categoria: "Mejoras en Atención y Servicios",
-        porcentaje: 53,
-        detalles: [
-          { sugerencia: "Buenas atención y amabilidad", porcentaje: 11 },
-          { sugerencia: "Mala atención por audiorespuesta/contact center", porcentaje: 8 },
-          { sugerencia: "Disminuir tiempo de respuesta (PQR y Correos)", porcentaje: 7 }
-        ]
-      },
-      {
-        categoria: "Mejoras en Productos",
-        porcentaje: 32,
-        detalles: [
-          { sugerencia: "Bajas tasas de interés / Mejorar las tasas", porcentaje: 17 },
-          { sugerencia: "Alto costo en las tarifas", porcentaje: 9 }
-        ]
-      },
-      {
-        categoria: "Mejoras Tecnológicas",
-        porcentaje: 15
-      }
-    ];
+    // Obtener todas las sugerencias del CSV
+    const sugerenciasField = '¿Tiene alguna recomendación o sugerencia acerca del servicio que le ofrecemos en Coltefinanciera?';
+    const sugerencias = this.data
+      .map(record => (record as any)[sugerenciasField])
+      .filter(sugerencia => sugerencia && sugerencia.trim() && sugerencia.trim() !== '""""""' && sugerencia.trim() !== 'No')
+      .map((sugerencia: string) => sugerencia.replace(/"/g, '').trim())
+      .filter(sugerencia => sugerencia.length > 3);
+
+    // Categorizar sugerencias por palabras clave
+    const categorias = {
+      atencion: ['atención', 'atencion', 'servicio', 'amabilidad', 'trato', 'personal', 'asesor', 'contact center', 'llamada'],
+      productos: ['tasa', 'interés', 'interes', 'tarifa', 'costo', 'precio', 'producto', 'cdt', 'crédito', 'credito'],
+      tecnologia: ['app', 'aplicación', 'aplicacion', 'página', 'pagina', 'web', 'digital', 'online', 'virtual'],
+      tiempo: ['tiempo', 'rápido', 'rapido', 'pronto', 'agilidad', 'demora', 'lento', 'respuesta'],
+      horarios: ['horario', 'hora', 'disponibilidad', 'acceso', 'abierto']
+    };
+
+    const totalSugerencias = sugerencias.length;
+    
+    const categorizadas = {
+      'Mejoras en Atención y Servicios': sugerencias.filter((s: string) => 
+        categorias.atencion.some(palabra => s.toLowerCase().includes(palabra))
+      ),
+      'Mejoras en Productos y Tarifas': sugerencias.filter((s: string) => 
+        categorias.productos.some(palabra => s.toLowerCase().includes(palabra))
+      ),
+      'Mejoras Tecnológicas': sugerencias.filter((s: string) => 
+        categorias.tecnologia.some(palabra => s.toLowerCase().includes(palabra))
+      ),
+      'Mejoras en Tiempos de Respuesta': sugerencias.filter((s: string) => 
+        categorias.tiempo.some(palabra => s.toLowerCase().includes(palabra))
+      ),
+      'Mejoras en Horarios': sugerencias.filter((s: string) => 
+        categorias.horarios.some(palabra => s.toLowerCase().includes(palabra))
+      )
+    };
+
+    return Object.entries(categorizadas)
+      .map(([categoria, items]) => {
+        const porcentaje = totalSugerencias > 0 ? Math.round((items.length / totalSugerencias) * 100) : 0;
+        
+        // Obtener las 3 sugerencias más comunes de esta categoría
+        const sugerenciasUnicas = [...new Set(items)];
+        const detalles = sugerenciasUnicas.slice(0, 3).map(sugerencia => ({
+          sugerencia: sugerencia.substring(0, 80) + (sugerencia.length > 80 ? '...' : ''),
+          porcentaje: Math.round((1 / totalSugerencias) * 100)
+        }));
+
+        return {
+          categoria,
+          porcentaje,
+          count: items.length,
+          detalles
+        };
+      })
+      .filter(item => item.count > 0)
+      .sort((a, b) => b.count - a.count);
   }
 
+
+  // Helper methods for calculations
   private calculateAverage(metric: keyof SatisfactionRecord): number {
     const values = this.data
       .map(d => d[metric] as number)

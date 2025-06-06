@@ -1,8 +1,18 @@
 # Medición del Servicio - Coltefinanciera
 
+[![Deploy to GitHub Pages](https://github.com/jhonlaurens/coltefinanciera-customer-satisfaction-analytics/actions/workflows/deploy.yml/badge.svg)](https://github.com/jhonlaurens/coltefinanciera-customer-satisfaction-analytics/actions/workflows/deploy.yml)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-success?logo=github)](https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/)
+
 📋 **Descripción**
 
 Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite procesar, analizar y visualizar datos de satisfacción del cliente y medición de servicios. El proyecto utiliza inteligencia artificial para generar insights automáticos a partir de los datos recopilados.
+
+---
+
+🌐 **Acceso en Vivo**
+
+- **GitHub Pages:** [https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/](https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/)
+- **Dominio personalizado:** [https://medicion.coltefinanciera.com](https://medicion.coltefinanciera.com) *(requiere configuración DNS)*
 
 ---
 
@@ -13,6 +23,7 @@ Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite 
 - **Reportes Automáticos:** Generación de informes con IA
 - **Interfaz Intuitiva:** Dashboard fácil de usar para análisis de datos
 - **Integración con IA:** (Opcional) Utiliza Google Gemini para análisis avanzado
+- **Deployment Automático:** Configurado para GitHub Pages con GitHub Actions
 
 ---
 
@@ -23,6 +34,7 @@ Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite 
 - **IA:** (Opcional) Google Gemini API
 - **Visualización:** Recharts
 - **Estilos:** CSS3 / Tailwind CSS
+- **Deployment:** GitHub Pages + GitHub Actions
 
 ---
 
@@ -70,6 +82,47 @@ Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite 
 - Visita [Google AI Studio](https://aistudio.google.com/app/apikey)
 - Crea una nueva API key
 - Copia la clave y agrégala a tu archivo `.env.local`
+
+---
+
+🚀 **Deployment a GitHub Pages**
+
+Este proyecto está configurado para deployment automático a GitHub Pages usando GitHub Actions.
+
+### Deployment Automático
+
+1. **Hacer commit de los cambios:**
+```bash
+git add .
+git commit -m "feat: Update application"
+git push origin main
+```
+
+2. **GitHub Actions se ejecutará automáticamente y desplegará a:**
+   - https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/
+
+### Scripts de Deployment Disponibles
+
+```bash
+# Build para GitHub Pages
+npm run build:pages
+
+# Deploy manual (alternativo)
+npm run deploy
+```
+
+### Configuración de Dominio Personalizado
+
+Para usar `medicion.coltefinanciera.com`:
+
+1. **Configurar DNS:**
+   ```
+   CNAME: medicion.coltefinanciera.com → jhonlaurens.github.io
+   ```
+
+2. **Verificar en GitHub:**
+   - Ve a Settings → Pages
+   - Verifica que el dominio esté configurado correctamente
 
 ---
 
