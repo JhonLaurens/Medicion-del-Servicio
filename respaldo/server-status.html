@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado del Servidor - Coltefinanciera</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 5px; 
+            border-left: 5px solid #007A7A; 
+            background: #f0f8ff; 
+        }
+        .error { 
+            border-left-color: #dc3545; 
+            background: #f8d7da; 
+        }
+        .success { 
+            border-left-color: #28a745; 
+            background: #d4edda; 
+        }
+        .warning { 
+            border-left-color: #ffc107; 
+            background: #fff3cd; 
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #007A7A; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 5px; 
+        }
+        .btn:hover { background: #005f5f; }
+        .code { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 3px; 
+            font-family: monospace; 
+            border: 1px solid #e9ecef; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Estado del Servidor de Desarrollo</h1>
+        
+        <div id="server-status" class="status">
+            🔍 Verificando servidores...
+        </div>
+        
+        <div id="results"></div>
+        
+        <h2>🚀 Instrucciones para Iniciar</h2>
+        <div class="warning">
+            <h3>Si la aplicación no se carga:</h3>
+            <ol>
+                <li><strong>Opción 1:</strong> Haz doble clic en <code>launch-app.bat</code></li>
+                <li><strong>Opción 2:</strong> Ejecuta en PowerShell:
+                    <div class="code">npm install<br>npm run dev</div>
+                </li>
+                <li><strong>Opción 3:</strong> Si el puerto está ocupado:
+                    <div class="code">npx vite --port 3000</div>
+                </li>
+            </ol>
+        </div>
+        
+        <h2>🔗 Enlaces Rápidos</h2>
+        <a href="http://localhost:5173" class="btn" target="_blank">🌐 Puerto 5173 (Principal)</a>
+        <a href="http://localhost:3000" class="btn" target="_blank">🌐 Puerto 3000</a>
+        <a href="http://localhost:4173" class="btn" target="_blank">🌐 Puerto 4173</a>
+        <a href="http://localhost:8080" class="btn" target="_blank">🌐 Puerto 8080</a>
+        <br><br>
+        <a href="./diagnostic.html" class="btn">🔧 Diagnóstico Completo</a>
+        <a href="./test.html" class="btn">🧪 Test de Datos</a>
+        
+        <div id="instructions" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        async function checkServer(port) {
+            try {
+                // Try to fetch from the server
+                const response = await fetch(`http://localhost:${port}/`, {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                return true;
+            } catch (error) {
+                try {
+                    // Alternative check - try to create an image element
+                    const img = new Image();
+                    return new Promise((resolve) => {
+                        img.onload = () => resolve(true);
+                        img.onerror = () => resolve(false);
+                        img.src = `http://localhost:${port}/favicon.ico?${Date.now()}`;
+                        setTimeout(() => resolve(false), 2000);
+                    });
+                } catch (e) {
+                    return false;
+                }
+            }
+        }
+        
+        async function checkAllServers() {
+            const ports = [5173, 3000, 4173, 8080];
+            const statusDiv = document.getElementById('server-status');
+            const resultsDiv = document.getElementById('results');
+            const instructionsDiv = document.getElementById('instructions');
+            
+            let foundServer = false;
+            
+            statusDiv.innerHTML = '🔍 Verificando puertos...';
+            
+            for (const port of ports) {
+                const isActive = await checkServer(port);
+                
+                const resultDiv = document.createElement('div');
+                if (isActive) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ Servidor encontrado en puerto ${port}`;
+                    foundServer = true;
+                    
+                    // Add iframe to test if the app loads
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `http://localhost:${port}`;
+                    iframe.style.width = '100%';
+                    iframe.style.height = '300px';
+                    iframe.style.border = '1px solid #ddd';
+                    iframe.style.marginTop = '10px';
+                    resultDiv.appendChild(iframe);
+                    
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ Puerto ${port} no disponible`;
+                }
+                resultsDiv.appendChild(resultDiv);
+            }
+            
+            if (foundServer) {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Servidor de desarrollo encontrado y funcionando';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ No se encontró ningún servidor activo';
+                
+                instructionsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>🚨 ¡Servidor no encontrado!</h3>
+                        <p>Para iniciar la aplicación, sigue estos pasos:</p>
+                        <ol>
+                            <li>Abre una terminal (PowerShell) en la carpeta del proyecto</li>
+                            <li>Ejecuta: <code>npm install</code> (solo la primera vez)</li>
+                            <li>Ejecuta: <code>npm run dev</code></li>
+                            <li>Espera a ver un mensaje como "Local: http://localhost:5173"</li>
+                            <li>Haz clic en esa URL o cópiala en tu navegador</li>
+                        </ol>
+                        <p><strong>Alternativamente:</strong> Haz doble clic en <code>launch-app.bat</code> en la carpeta del proyecto.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Check servers when page loads
+        checkAllServers();
+        
+        // Refresh every 10 seconds
+        setInterval(checkAllServers, 10000);
+    </script>
+</body>
+</html>
