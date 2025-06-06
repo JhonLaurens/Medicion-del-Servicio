@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
-    "build:pages": "vite build --base=/coltefinanciera-customer-satisfaction-analytics/"
+    "build:pages": "vite build --base=/Medicion-del-Servicio/"
   },
   "dependencies": {
     "@types/papaparse": "^5.3.16",

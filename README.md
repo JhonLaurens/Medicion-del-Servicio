@@ -1,7 +1,7 @@
 # Medición del Servicio - Coltefinanciera
 
-[![Deploy to GitHub Pages](https://github.com/jhonlaurens/coltefinanciera-customer-satisfaction-analytics/actions/workflows/deploy.yml/badge.svg)](https://github.com/jhonlaurens/coltefinanciera-customer-satisfaction-analytics/actions/workflows/deploy.yml)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-success?logo=github)](https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/)
+[![Deploy to GitHub Pages](https://github.com/JhonLaurens/Medicion-del-Servicio/actions/workflows/deploy.yml/badge.svg)](https://github.com/JhonLaurens/Medicion-del-Servicio/actions/workflows/deploy.yml)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-success?logo=github)](https://jhonlaurens.github.io/Medicion-del-Servicio/)
 
 📋 **Descripción**
 
@@ -11,7 +11,7 @@ Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite 
 
 🌐 **Acceso en Vivo**
 
-- **GitHub Pages:** [https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/](https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/)
+- **GitHub Pages:** [https://jhonlaurens.github.io/Medicion-del-Servicio/](https://jhonlaurens.github.io/Medicion-del-Servicio/)
 - **Dominio personalizado:** [https://medicion.coltefinanciera.com](https://medicion.coltefinanciera.com) *(requiere configuración DNS)*
 
 ---
@@ -99,7 +99,7 @@ git push origin main
 ```
 
 2. **GitHub Actions se ejecutará automáticamente y desplegará a:**
-   - https://jhonlaurens.github.io/coltefinanciera-customer-satisfaction-analytics/
+   - https://jhonlaurens.github.io/Medicion-del-Servicio/
 
 ### Scripts de Deployment Disponibles
 
