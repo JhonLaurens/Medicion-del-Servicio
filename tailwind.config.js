@@ -7,9 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Paleta Coltefinanciera
+        brand: {
+          primary: '#1a5f7a', // Azul corporativo Coltefinanciera
+          secondary: '#2c8aa6', // Azul claro
+          accent: '#57a3c4', // Azul accent
+          light: '#86c5da', // Azul muy claro
+          dark: '#0f3d4f', // Azul oscuro
+        },
         primary: {
           50: '#eff6ff',
-          100: '#dbeafe',
+          100: '#dbeafe', 
           200: '#bfdbfe',
           300: '#93c5fd',
           400: '#60a5fa',
@@ -18,6 +26,20 @@ export default {
           700: '#1d4ed8',
           800: '#1e3a8a',
           900: '#1e293b',
+        },
+        // Colores para métricas
+        metrics: {
+          excellent: '#059669', // Verde para calificaciones 5
+          good: '#0891b2', // Azul para calificaciones 4  
+          warning: '#d97706', // Naranja para calificaciones 3
+          critical: '#dc2626', // Rojo para calificaciones 1-2
+          neutral: '#6b7280', // Gris neutro
+        },
+        // Gradientes corporativos
+        gradient: {
+          from: '#1a5f7a',
+          via: '#2c8aa6', 
+          to: '#57a3c4'
         },
         gray: {
           50: '#f8fafc',

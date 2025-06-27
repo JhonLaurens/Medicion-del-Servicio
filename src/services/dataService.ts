@@ -101,8 +101,8 @@ export class SatisfactionDataService {
       totalEncuestados: this.data.length,
       porcentajeRespuesta: parseFloat(((this.data.length / 24067) * 100).toFixed(2)),
       nivelConfianza: "95%",
-      margenError: "0,48%",
-      periodoCampo: "03 de enero al 17 de julio de 2024",
+      margenError: "2,50%",
+      periodoCampo: "15 de abril al 01 de junio de 2025",
       metodoRecoleccion: "Web, mediante SurveyMonkey",
       metricasEvaluadas: [
         "Claridad de la Información (Atención)",
@@ -115,22 +115,53 @@ export class SatisfactionDataService {
 
   getKPIData(): KPIData[] {
     const metrics = [
+      { key: 'claridad_informacion', name: 'Claridad de la Información (Atención)' },
       { key: 'satisfaccion_general', name: 'Satisfacción General' },
       { key: 'lealtad', name: 'Lealtad' },
       { key: 'recomendacion', name: 'Recomendación' }
     ];
-    const metricFields = ['satisfaccion_general', 'lealtad', 'recomendacion'];
-    return metrics.map(metric => {
+    
+    if (isDev) {
+      console.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
+      console.log('📊 getKPIData: Total data records:', this.data.length);
+    }
+    
+    const result = metrics.map(metric => {
       const allData = this.data.filter(d => d[metric.key as keyof SatisfactionRecord] !== null && d[metric.key as keyof SatisfactionRecord] !== undefined);
       const personasData = allData.filter(d => d.SEGMENTO === 'PERSONAS');
       const empresarialData = allData.filter(d => d.SEGMENTO === 'EMPRESARIAL');
+      
+      if (isDev) {
+        console.log(`📊 getKPIData: Processing ${metric.name}:`, {
+          total: allData.length,
+          personas: personasData.length,
+          empresarial: empresarialData.length
+        });
+      }
       const calculateStats = (data: SatisfactionRecord[], metricKey: string) => {
         if (data.length === 0) return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
         const values = data.map(d => d[metricKey as keyof SatisfactionRecord] as number).filter(v => v !== null && v !== undefined);
+        
+        if (values.length === 0) return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+        
         const average = parseFloat((values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(2));
-        const rating5 = parseFloat(((values.filter(v => v === 5).length / values.length) * 100).toFixed(1));
-        const rating4 = parseFloat(((values.filter(v => v === 4).length / values.length) * 100).toFixed(1));
-        const rating123 = parseFloat(((values.filter(v => v <= 3).length / values.length) * 100).toFixed(1));
+        
+        // Para muestras pequeñas, usar más decimales para evitar redondeo a 0
+        const precision = values.length < 50 ? 2 : 1;
+        const rating5 = parseFloat(((values.filter(v => v === 5).length / values.length) * 100).toFixed(precision));
+        const rating4 = parseFloat(((values.filter(v => v === 4).length / values.length) * 100).toFixed(precision));
+        const rating123 = parseFloat(((values.filter(v => v <= 3).length / values.length) * 100).toFixed(precision));
+        
+        if (isDev && values.length < 50) {
+          console.log(`📊 calculateStats for small sample (${values.length} records):`, {
+            values,
+            rating5Count: values.filter(v => v === 5).length,
+            rating4Count: values.filter(v => v === 4).length,
+            rating123Count: values.filter(v => v <= 3).length,
+            calculated: { average, rating5, rating4, rating123 }
+          });
+        }
+        
         return { average, rating5, rating4, rating123 };
       };
       return {
@@ -140,6 +171,12 @@ export class SatisfactionDataService {
         empresarial: calculateStats(empresarialData, metric.key)
       };
     });
+    
+    if (isDev) {
+      console.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
+    }
+    
+    return result;
   }
 
   getCityData(): GeographicData[] {
