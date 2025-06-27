@@ -129,40 +129,17 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ currentPage, onPa
           ))}
         </div>
         
-        {/* Enhanced footer */}
+        {/* Simplified footer */}
         <div className="mt-8 pt-6 border-t border-gray-200">
-          {/* System info card */}
           <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 shadow-inner border border-gray-200">
             <div className="text-center space-y-3">
-              {/* Logo section */}
-              <div className="flex justify-center mb-3">
-                <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-md flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">C</span>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-xs font-semibold text-gray-700">Sistema Activo</p>
               </div>
               
-              {/* System info */}
-              <div>
-                <p className="text-xs font-semibold text-gray-700">
-                  Customer Analytics Platform
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Versión 2.0 • © 2025 Coltefinanciera
-                </p>
-              </div>
-              
-              {/* Status indicators */}
-              <div className="flex justify-center space-x-4 text-xs">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-600">Sistema</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-600">Datos</span>
-                </div>
+              <div className="text-xs text-gray-500">
+                Analytics Platform v2.0 • © 2025
               </div>
             </div>
           </div>

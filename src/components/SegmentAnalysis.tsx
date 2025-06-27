@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { satisfactionDataService } from '../services/dataService';
 import { KPIData } from '../types';
-import TooltipPregunta from './TooltipPregunta';
-import { getQuestionByDisplayName, SURVEY_INFO } from '../data/questionsMap';
+import { SURVEY_INFO } from '../data/questionsMap';
+import ImprovedDistributionChart from './ImprovedDistributionChart';
+import ImprovedComparisonTable from './ImprovedComparisonTable';
+
+
 
 const SegmentAnalysis: React.FC = () => {
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
@@ -76,7 +79,7 @@ const SegmentAnalysis: React.FC = () => {
   const prepareDumbbellData = () => {
     if (!hasValidData) return [];
 
-    return kpiData.map((kpi, index) => {
+    return kpiData.map((kpi) => {
       const personasAvg = Math.max(0, Math.min(5, typeof kpi.personas?.average === 'number' ? kpi.personas.average : 0));
       const empresasAvg = Math.max(0, Math.min(5, typeof kpi.empresarial?.average === 'number' ? kpi.empresarial.average : 0));
       
@@ -117,22 +120,28 @@ const SegmentAnalysis: React.FC = () => {
     
     return [
       {
-        rating: 'Excelente (5)',
+        rating: 'rating5',
+        label: 'Excelente (5)',
         personas: Math.round((personasData.rating5 / numMetrics) * 10) / 10,
         empresas: Math.round((empresasData.rating5 / numMetrics) * 10) / 10,
-        fill: colors.rating5
+        personas_percent: Math.round((personasData.rating5 / numMetrics) * 10) / 10,
+        empresas_percent: Math.round((empresasData.rating5 / numMetrics) * 10) / 10
       },
       {
-        rating: 'Bueno (4)',
+        rating: 'rating4',
+        label: 'Bueno (4)',
         personas: Math.round((personasData.rating4 / numMetrics) * 10) / 10,
         empresas: Math.round((empresasData.rating4 / numMetrics) * 10) / 10,
-        fill: colors.rating4
+        personas_percent: Math.round((personasData.rating4 / numMetrics) * 10) / 10,
+        empresas_percent: Math.round((empresasData.rating4 / numMetrics) * 10) / 10
       },
       {
-        rating: 'Necesita Mejora (1-3)',
+        rating: 'rating123',
+        label: 'Necesita Mejora (1-3)',
         personas: Math.round((personasData.rating123 / numMetrics) * 10) / 10,
         empresas: Math.round((empresasData.rating123 / numMetrics) * 10) / 10,
-        fill: colors.rating123
+        personas_percent: Math.round((personasData.rating123 / numMetrics) * 10) / 10,
+        empresas_percent: Math.round((empresasData.rating123 / numMetrics) * 10) / 10
       }
     ];
   };
@@ -150,20 +159,23 @@ const SegmentAnalysis: React.FC = () => {
           <p className="font-bold text-gray-800 mb-3 text-center border-b pb-2">{label}</p>
           
           <div className="space-y-3 mb-3">
-            {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
-                <div className="flex items-center">
-                  <span 
-                    className="w-4 h-4 rounded-full mr-3 border-2 border-white shadow-sm" 
-                    style={{ backgroundColor: entry.color }}
-                  ></span>
-                  <span className="text-sm font-medium text-gray-700">{entry.name}</span>
+            {payload.map((entry: any, index: number) => {
+              const isPersonas = entry.name?.includes('Personas');
+              const colorClass = isPersonas ? 'text-brand-primary' : 'text-brand-secondary';
+              const bgColorClass = isPersonas ? 'bg-brand-primary' : 'bg-brand-secondary';
+              
+              return (
+                <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
+                  <div className="flex items-center">
+                    <span className={`w-4 h-4 rounded-full mr-3 border-2 border-white shadow-sm ${bgColorClass}`}></span>
+                    <span className="text-sm font-medium text-gray-700">{entry.name}</span>
+                  </div>
+                  <span className={`font-bold text-lg ${colorClass}`}>
+                    {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+                  </span>
                 </div>
-                <span className="font-bold text-lg" style={{ color: entry.color }}>
-                  {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {payload[0]?.payload?.gap && (
@@ -351,7 +363,7 @@ const SegmentAnalysis: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección 2: Distribución de Calificaciones - Diseño Profesional */}
+        {/* Sección 2: Distribución de Calificaciones - Componente Mejorado */}
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
           {/* Header de sección */}
           <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-8 py-6">
@@ -368,7 +380,7 @@ const SegmentAnalysis: React.FC = () => {
           
           <div className="p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Gráfico de distribución mejorado */}
+              {/* Gráfico de distribución con componente mejorado */}
               <div className="bg-gray-50 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-gray-800">Promedio de Distribución por Categoría</h3>
@@ -377,51 +389,10 @@ const SegmentAnalysis: React.FC = () => {
                   </div>
                 </div>
                 {distributionData.length > 0 ? (
-                  <div style={{ width: '100%', height: '350px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={distributionData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis 
-                          dataKey="rating"
-                          tick={{ fontSize: 10, fill: '#6b7280' }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={80}
-                          interval={0}
-                        />
-                        <YAxis 
-                          tick={{ fontSize: 12, fill: '#6b7280' }}
-                          label={{ value: 'Porcentaje (%)', angle: -90, position: 'insideLeft' }}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend 
-                          verticalAlign="top" 
-                          height={36}
-                          iconType="rect"
-                        />
-                        <Bar 
-                          dataKey="personas" 
-                          fill={colors.personas}
-                          name="Personas"
-                          radius={[4, 4, 0, 0]}
-                          stroke="#ffffff"
-                          strokeWidth={1}
-                          minPointSize={8}
-                          maxBarSize={50}
-                        />
-                        <Bar 
-                          dataKey="empresas" 
-                          fill={colors.empresas}
-                          name="Empresas"
-                          radius={[4, 4, 0, 0]}
-                          stroke="#ffffff"
-                          strokeWidth={1}
-                          minPointSize={8}
-                          maxBarSize={50}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <ImprovedDistributionChart 
+                    data={distributionData}
+                    title="Distribución de Calificaciones"
+                  />
                 ) : (
                   <NoDataMessage title="Sin datos de distribución disponibles" />
                 )}
@@ -500,7 +471,7 @@ const SegmentAnalysis: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Comparativo Detallado por Métrica</h2>
           
           {dumbbellData.length > 0 ? (
-            <div style={{ width: '100%', height: '400px' }}>
+            <div className="w-full h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
                   layout="horizontal"
@@ -559,7 +530,7 @@ const SegmentAnalysis: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Tendencia Comparativa entre Segmentos</h2>
           
           {comparisonData.length > 0 ? (
-            <div style={{ width: '100%', height: '350px' }}>
+            <div className="w-full h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart 
                   data={comparisonData} 
@@ -612,120 +583,26 @@ const SegmentAnalysis: React.FC = () => {
           )}
         </div>
 
-        {/* Resumen Comparativo Detallado */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Resumen Comparativo Detallado</h2>
-          
-          <div className="overflow-x-auto relative">
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full relative">
-                <thead className="sticky top-0 bg-white z-20 shadow-sm">
-                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 min-w-0 w-1/3">Métrica</th>
-                    <th className="text-center py-4 px-4 font-semibold text-blue-700 min-w-0 w-1/6">Personas</th>
-                    <th className="text-center py-4 px-4 font-semibold text-purple-700 min-w-0 w-1/6">Empresas</th>
-                    <th className="text-center py-4 px-4 font-semibold text-gray-700 min-w-0 w-1/6">Brecha</th>
-                    <th className="text-center py-4 px-4 font-semibold text-gray-700 min-w-0 w-1/6">Líder</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {insights.map((insight, index) => {
-                    const questionMapping = getQuestionByDisplayName(insight.metric);
-                    const personasExc = kpiData.find(k => k.metric === insight.metric)?.personas?.rating5 || 0;
-                    const empresarialExc = kpiData.find(k => k.metric === insight.metric)?.empresarial?.rating5 || 0;
-                    
-                    return (
-                      <tr key={index} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group">
-                        <td className="py-4 px-4 min-w-0">
-                          <div className="flex flex-col">
-                            {questionMapping ? (
-                              <div className="relative">
-                                <TooltipPregunta questionMapping={questionMapping}>
-                                  <span className="font-semibold text-gray-800 cursor-help hover:text-blue-600 flex items-center transition-colors group-hover:text-blue-700">
-                                    <span className="truncate block max-w-xs" title={insight.metric}>
-                                      {insight.metric}
-                                    </span>
-                                    <span className="ml-2 text-blue-500 text-sm flex-shrink-0">ℹ️</span>
-                                  </span>
-                                </TooltipPregunta>
-                              </div>
-                            ) : (
-                              <span className="font-semibold text-gray-800 truncate block max-w-xs" title={insight.metric}>
-                                {insight.metric}
-                              </span>
-                            )}
-                            <span className="text-xs text-gray-500 mt-1 flex-shrink-0">
-                              Pregunta {questionMapping?.questionNumber || 'N/A'} - Escala 1-5
-                            </span>
-                          </div>
-                        </td>
-                        <td className="text-center py-4 px-2 min-w-0">
-                          <div className="bg-blue-50 rounded-lg p-2 mx-1">
-                            <div className="text-xl font-bold text-blue-700 mb-1">{insight.personasAvg.toFixed(2)}</div>
-                            <div className="text-xs font-medium text-blue-600">{personasExc.toFixed(0)}% exc.</div>
-                            <div className="w-full bg-blue-200 rounded-full h-1.5 mt-2">
-                              <div 
-                                className={`bg-blue-600 h-1.5 rounded-full transition-all duration-1000 ${
-                                  insight.personasAvg >= 4.5 ? 'w-full' :
-                                  insight.personasAvg >= 4.0 ? 'w-5/6' :
-                                  insight.personasAvg >= 3.5 ? 'w-3/4' :
-                                  insight.personasAvg >= 3.0 ? 'w-3/5' :
-                                  insight.personasAvg >= 2.5 ? 'w-1/2' :
-                                  insight.personasAvg >= 2.0 ? 'w-2/5' :
-                                  insight.personasAvg >= 1.5 ? 'w-1/3' :
-                                  insight.personasAvg >= 1.0 ? 'w-1/4' : 'w-1/12'
-                                }`}
-                              ></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="text-center py-4 px-2 min-w-0">
-                          <div className="bg-purple-50 rounded-lg p-2 mx-1">
-                            <div className="text-xl font-bold text-purple-700 mb-1">{insight.empresarialAvg.toFixed(2)}</div>
-                            <div className="text-xs font-medium text-purple-600">{empresarialExc.toFixed(0)}% exc.</div>
-                            <div className="w-full bg-purple-200 rounded-full h-1.5 mt-2">
-                              <div 
-                                className={`bg-purple-600 h-1.5 rounded-full transition-all duration-1000 ${
-                                  insight.empresarialAvg >= 4.5 ? 'w-full' :
-                                  insight.empresarialAvg >= 4.0 ? 'w-5/6' :
-                                  insight.empresarialAvg >= 3.5 ? 'w-3/4' :
-                                  insight.empresarialAvg >= 3.0 ? 'w-3/5' :
-                                  insight.empresarialAvg >= 2.5 ? 'w-1/2' :
-                                  insight.empresarialAvg >= 2.0 ? 'w-2/5' :
-                                  insight.empresarialAvg >= 1.5 ? 'w-1/3' :
-                                  insight.empresarialAvg >= 1.0 ? 'w-1/4' : 'w-1/12'
-                                }`}
-                              ></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="text-center py-4 px-2 min-w-0">
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-bold whitespace-nowrap ${
-                            insight.gap > 0.5 ? 'bg-red-100 text-red-700' :
-                            insight.gap > 0.2 ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {insight.gap.toFixed(2)}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1 font-medium">
-                            {insight.significance}
-                          </div>
-                        </td>
-                        <td className="text-center py-4 px-2 min-w-0">
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-bold whitespace-nowrap ${
-                            insight.leader === 'Personas' ? 'bg-blue-100 text-blue-700' :
-                            insight.leader === 'Empresas' ? 'bg-purple-100 text-purple-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {insight.leader}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        {/* Resumen Comparativo Detallado - Tabla Mejorada */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+          {/* Header de sección */}
+          <div className="bg-gradient-to-r from-brand-primary via-brand-secondary to-brand-accent px-8 py-6">
+            <div className="flex items-center justify-between text-white">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">Resumen Comparativo Detallado</h2>
+                <p className="text-brand-light">Comparación métrica por métrica entre segmentos de clientes</p>
+              </div>
+              <div className="bg-white/10 p-3 rounded-lg">
+                <span className="text-2xl">📈</span>
+              </div>
             </div>
+          </div>
+          
+          <div className="p-8">
+            <ImprovedComparisonTable 
+              data={kpiData}
+              title="Análisis Comparativo por Métricas"
+            />
           </div>
         </div>
 

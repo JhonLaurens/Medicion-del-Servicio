@@ -1,6 +1,10 @@
 import React from 'react';
 
-const HomePage: React.FC = () => {
+interface HomePageProps {
+  onNavigate?: (page: string) => void;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white relative overflow-hidden">
       {/* Enhanced background decoration */}
@@ -99,9 +103,12 @@ const HomePage: React.FC = () => {
           <p className="text-xl text-blue-100 font-light">
             Sistema integral de análisis de satisfacción del cliente
           </p>
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer inline-block">
+          <button 
+            onClick={() => onNavigate?.('dashboard-general')}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer inline-block"
+          >
             Explorar Dashboard
-          </div>
+          </button>
         </div>
       </div>
 
@@ -124,46 +131,64 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {/* Dashboard General */}
-            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('dashboard-general')}
+              className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📊</div>
               <div className="text-sm font-semibold text-white mb-1">Dashboard General</div>
               <div className="text-xs text-blue-200">Métricas principales</div>
-            </div>
+            </button>
 
             {/* Análisis Geográfico */}
-            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('analisis-geografico')}
+              className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">🗺️</div>
               <div className="text-sm font-semibold text-white mb-1">Análisis Geográfico</div>
               <div className="text-xs text-blue-200">Por regiones</div>
-            </div>
+            </button>
 
             {/* Participación de Gerentes */}
-            <div className="bg-gradient-to-br from-yellow-400/25 to-orange-500/25 backdrop-blur-md rounded-xl p-5 border border-yellow-300/40 hover:from-yellow-400/35 hover:to-orange-500/35 hover:border-yellow-300/60 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('participacion-gerentes')}
+              className="bg-gradient-to-br from-yellow-400/25 to-orange-500/25 backdrop-blur-md rounded-xl p-5 border border-yellow-300/40 hover:from-yellow-400/35 hover:to-orange-500/35 hover:border-yellow-300/60 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">👨‍💼</div>
               <div className="text-sm font-semibold text-yellow-100 mb-1">Participación Gerentes</div>
               <div className="inline-block bg-yellow-400/80 text-blue-900 px-2 py-1 rounded-full text-xs font-bold shadow-sm">✨ NUEVO</div>
-            </div>
+            </button>
 
             {/* Análisis por Segmentos */}
-            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('analisis-segmento')}
+              className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">👥</div>
               <div className="text-sm font-semibold text-white mb-1">Análisis Segmentos</div>
               <div className="text-xs text-blue-200">Personas vs Empresas</div>
-            </div>
+            </button>
 
             {/* Análisis de Sugerencias */}
-            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('analisis-sugerencias')}
+              className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">💡</div>
               <div className="text-sm font-semibold text-white mb-1">Sugerencias</div>
               <div className="text-xs text-blue-200">Insights del cliente</div>
-            </div>
+            </button>
 
             {/* Explorador de Datos */}
-            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group">
+            <button 
+              onClick={() => onNavigate?.('explorador-datos')}
+              className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer"
+            >
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">🔍</div>
               <div className="text-sm font-semibold text-white mb-1">Explorador</div>
               <div className="text-xs text-blue-200">Datos detallados</div>
-            </div>
+            </button>
           </div>
         </div>
       </div>

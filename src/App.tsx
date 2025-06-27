@@ -46,7 +46,7 @@ const App: React.FC = () => {
 
     switch (currentPage) {
       case 'inicio':
-        return <HomePage />;
+        return <HomePage onNavigate={setCurrentPage} />;
       case 'ficha-tecnica':
         return <TechnicalSpecsPage />;
       case 'dashboard-general':

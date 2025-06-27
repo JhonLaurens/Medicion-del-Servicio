@@ -7,51 +7,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta Coltefinanciera
+        // Paleta Coltefinanciera - Consolidada
         brand: {
-          primary: '#1a5f7a', // Azul corporativo Coltefinanciera
-          secondary: '#2c8aa6', // Azul claro
-          accent: '#57a3c4', // Azul accent
-          light: '#86c5da', // Azul muy claro
-          dark: '#0f3d4f', // Azul oscuro
+          primary: '#1a5f7a',    // Azul corporativo principal
+          secondary: '#2c8aa6',  // Azul claro secundario
+          accent: '#57a3c4',     // Azul accent
+          light: '#86c5da',      // Azul muy claro
+          dark: '#0f3d4f',       // Azul oscuro
         },
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe', 
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#1e40af',
-          700: '#1d4ed8',
-          800: '#1e3a8a',
-          900: '#1e293b',
-        },
-        // Colores para métricas
+        // Colores para métricas - Optimizados
         metrics: {
-          excellent: '#059669', // Verde para calificaciones 5
-          good: '#0891b2', // Azul para calificaciones 4  
-          warning: '#d97706', // Naranja para calificaciones 3
-          critical: '#dc2626', // Rojo para calificaciones 1-2
-          neutral: '#6b7280', // Gris neutro
+          excellent: '#1e40af',  // Azul para calificaciones 5 (antes #059669)
+          good: '#10b981',       // Verde para calificaciones 4
+          warning: '#d97706',    // Naranja para calificaciones 3
+          critical: '#ef4444',   // Rojo para calificaciones 1-2
+          neutral: '#6b7280',    // Gris neutro
         },
         // Gradientes corporativos
         gradient: {
           from: '#1a5f7a',
           via: '#2c8aa6', 
           to: '#57a3c4'
-        },
-        gray: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
         }
       },
       fontFamily: {

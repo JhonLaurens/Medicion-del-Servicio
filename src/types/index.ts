@@ -69,6 +69,7 @@ export interface NavItem {
   id: string;
   label: string;
   icon?: string;
+  description?: string;
 }
 
 export interface TechnicalInfo {

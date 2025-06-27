@@ -11,7 +11,7 @@ const Header: React.FC = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
         <div className="flex items-center justify-between">
-          {/* Left section - Logo and Company */}
+          {/* Left section - Logo and System Title */}
           <div className="flex items-center space-x-6">
             <div className="bg-white p-3 rounded-xl shadow-lg ring-2 ring-white/20 backdrop-blur-sm">
               <img 
@@ -21,9 +21,9 @@ const Header: React.FC = () => {
               />
             </div>
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold text-white tracking-tight">Coltefinanciera</h1>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Analytics Platform</h1>
               <p className="text-brand-light text-sm font-medium tracking-wide">
-                Sistema de Análisis de Satisfacción del Cliente
+                Sistema de Medición del Servicio
               </p>
               <div className="flex items-center space-x-2 text-xs text-brand-light/80">
                 <span>📊</span>
