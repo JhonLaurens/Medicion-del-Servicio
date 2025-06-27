@@ -1,8 +1,16 @@
-# Medición del Servicio - Coltefinanciera
+# 📊 Dashboard Coltefinanciera - Análisis de Satisfacción del Cliente
+
+[![Deploy to GitHub Pages](https://github.com/JhonLaurens/Medicion-del-Servicio/actions/workflows/deploy.yml/badge.svg)](https://github.com/JhonLaurens/Medicion-del-Servicio/actions/workflows/deploy.yml)
+
+## 🚀 Ver Dashboard en Vivo
+
+**🌐 [Dashboard Coltefinanciera - GitHub Pages](https://jhonlaurens.github.io/Medicion-del-Servicio/)**
+
+---
 
 📋 **Descripción**
 
-Sistema de análisis de encuestas desarrollado para Coltefinanciera que permite procesar, analizar y visualizar datos de satisfacción del cliente y medición de servicios. El proyecto utiliza inteligencia artificial para generar insights automáticos a partir de los datos recopilados.
+Dashboard ejecutivo de análisis de satisfacción del cliente para **Coltefinanciera**, desarrollado con **React 18**, **TypeScript**, **Tailwind CSS** y **Recharts**. Presenta análisis comparativo por segmentos (Personas vs Empresas) con visualizaciones profesionales y métricas KPI ejecutivas.
 
 ---
 
