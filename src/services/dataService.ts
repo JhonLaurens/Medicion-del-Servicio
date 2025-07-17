@@ -1,5 +1,6 @@
 import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData } from '../types';
 import Papa from 'papaparse';
+import { DataServiceError } from './errors';
 
 interface DepartmentPerformanceData {
   department: string;
@@ -14,31 +15,26 @@ export class SatisfactionDataService {
 
   async loadData(): Promise<SatisfactionRecord[]> {
     if (this.data.length > 0) {
-      if (isDev) {
-        console.log('📊 DataService: Data already loaded,', this.data.length, 'records');
-      }
+      if (isDev) console.log('📊 DataService: Data already loaded,', this.data.length, 'records');
       return this.data;
     }
     
-    if (isDev) {
-      console.log('🚀 DataService: Starting data load process...');
-    }
+    if (isDev) console.log('🚀 DataService: Starting data load process...');
     
     try {
       const response = await fetch('/datos.csv');
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        throw new DataServiceError(`Error al cargar el archivo: ${response.statusText}`, 'FETCH_ERROR', response);
+      }
       const csvText = await response.text();
       
-      if (isDev) {
-        console.log('✅ DataService: CSV file fetched. Length:', csvText.length);
-      }
+      if (isDev) console.log('✅ DataService: CSV file fetched. Length:', csvText.length);
 
-      // Header mapping - matching exact CSV headers
       const headerMap: Record<string, string> = {
-        'En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?': 'claridad_informacion',
-        '¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?': 'recomendacion',
-        'En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?': 'satisfaccion_general',
-        'Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?': 'lealtad',
+        'En general ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?': 'claridad_informacion',
+        '¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas familiares o amigos?': 'recomendacion',
+        'En general ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?': 'satisfaccion_general',
+        'Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?': 'lealtad',
         'TIPO EJECUTIVO': 'TIPO_EJECUTIVO',
         'CIUDAD': 'CIUDAD',
         'AGENCIA': 'AGENCIA',
@@ -46,67 +42,48 @@ export class SatisfactionDataService {
         'EJECUTIVO_FINAL': 'EJECUTIVO_FINAL'
       };
 
-      const metricFields = [
-        'claridad_informacion',
-        'recomendacion',
-        'satisfaccion_general',
-        'lealtad'
-      ];
+      const metricFields = ['claridad_informacion', 'recomendacion', 'satisfaccion_general', 'lealtad'];
 
       const parsed = Papa.parse(csvText, {
         header: true,
         delimiter: ';',
         skipEmptyLines: true,
         transformHeader: (header: string) => {
-          const trimmedHeader = header.trim();
-          const mappedHeader = headerMap[trimmedHeader] || trimmedHeader;
-          if (isDev && headerMap[trimmedHeader]) {
-            console.log('🔄 Header mapped:', trimmedHeader, '->', mappedHeader);
-          }
-          return mappedHeader;
+          const trimmedHeader = header.trim().replace(/ +/g, ' ');
+          return headerMap[trimmedHeader] || trimmedHeader;
         },
         transform: (value: string, header: string) => {
-          if (metricFields.includes(header)) {
-            const num = parseInt(value);
+          if (metricFields.includes(header as string)) {
+            const num = parseInt(value, 10);
             return isNaN(num) ? null : num;
           }
           return value?.trim();
         }
       });
 
-      if (isDev) {
-        console.log('📋 DataService: Parsed headers:', Object.keys(parsed.data[0] || {}));
-        console.log('📊 DataService: Total parsed rows:', parsed.data.length);
+      if (parsed.errors.length > 0) {
+        console.warn('⚠️ DataService: Errors during CSV parsing:', parsed.errors);
       }
 
-      // Filtrar registros válidos
-      const filteredData = (parsed.data as any[]).filter(row => {
-        const hasId = row.ID && row.ID.trim() !== '';
-        const hasSegmento = row.SEGMENTO && row.SEGMENTO.trim() !== '';
-        const hasMetrics = metricFields.some(f => {
-          const value = row[f];
-          return value !== null && value !== undefined && value !== '' && !isNaN(Number(value));
-        });
-        return hasId && hasSegmento && hasMetrics;
-      }) as SatisfactionRecord[];
+      const filteredData = (parsed.data as any[]).filter(row =>
+        row.ID && row.SEGMENTO && metricFields.some(f => row[f] !== null && row[f] !== undefined)
+      ) as SatisfactionRecord[];
 
       this.data = filteredData;
       
       if (isDev) {
         console.log('✅ DataService: Loaded', this.data.length, 'valid records from', parsed.data.length, 'total rows');
-        if (this.data.length > 0) {
-          console.log('📄 DataService: First record example:', this.data[0]);
-          console.log('📊 DataService: Available fields:', Object.keys(this.data[0]));
-        } else {
-          console.log('⚠️ DataService: No valid records found. Sample row:', parsed.data[0]);
+        if (this.data.length === 0 && parsed.data.length > 0) {
+          console.warn('⚠️ DataService: No valid records after filtering. Check filtering logic and CSV structure.');
+          console.log('🔍 DataService: First raw row for debugging:', parsed.data[0]);
         }
       }
       return this.data;
     } catch (error) {
-      if (isDev) {
-        console.error('❌ DataService: Error loading CSV data:', error);
+      if (error instanceof DataServiceError) {
+        throw error;
       }
-      return [];
+      throw new DataServiceError('No se pudieron procesar los datos.', 'PROCESSING_ERROR', error);
     }
   }
 
