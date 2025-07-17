@@ -1,110 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coltefinanciera Satisfaction</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-primary': '#007A7A', // A teal/cyan shade
-              'brand-secondary': '#004F64', // A darker blue/cyan
-              'brand-accent': '#FFC107', // A warm accent like amber
-              'light-gray': '#f8f9fa',
-              'medium-gray': '#e9ecef',
-              'dark-gray': '#343a40',
-            },
-          },
-        },
-      }
-    </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "recharts": "https://esm.sh/recharts@^2.15.3"
-  }
-}
-</script>
-<link rel="stylesheet" href="/src/index.css">
-</head>
-  <body class="bg-light-gray">
-    <div id="root">
-      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-        <div style="margin: 20px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
-          <h2>🚀 Cargando Aplicación...</h2>
-          <p>Si este mensaje persiste, puede haber un problema con el servidor de desarrollo.</p>
-          <div style="margin-top: 20px;">
-            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #007A7A; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          </div>
-          <style>
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          </style>
-        </div>
-      </div>
-    </div>
+    <title>Dashboard Coltefinanciera</title>
+  </head>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Error handling for module loading
-      window.addEventListener('error', function(e) {
-        console.error('🚨 Loading error:', e);
-        const root = document.getElementById('root');
-        if (root) {
-          root.innerHTML = `
-            <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-              <div style="margin: 20px; padding: 20px; background: #ffe6e6; border: 1px solid #ff0000; border-radius: 8px;">
-                <h2>❌ Error de Carga</h2>
-                <p>No se pudo cargar la aplicación. Detalles:</p>
-                <pre style="text-align: left; background: #f8f8f8; padding: 10px; border-radius: 4px; overflow: auto;">
-Error: ${e.message}
-Archivo: ${e.filename}
-Línea: ${e.lineno}
-                </pre>
-                <p style="margin-top: 20px; font-size: 14px; color: #666;">
-                  Asegúrese de que el servidor de desarrollo esté ejecutándose con: <code>npm run dev</code>
-                </p>
-              </div>
-            </div>
-          `;
-        }
-      });
-
-      // Timeout to show message if app doesn't load
-      setTimeout(function() {
-        const root = document.getElementById('root');
-        if (root && root.innerHTML.includes('Cargando Aplicación')) {
-          root.innerHTML = `
-            <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-              <div style="margin: 20px; padding: 20px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
-                <h2>⚠️ La aplicación no se cargó</h2>
-                <p>El servidor de desarrollo puede no estar ejecutándose.</p>
-                <div style="margin-top: 20px; text-align: left;">
-                  <h3>Para iniciar la aplicación:</h3>
-                  <ol>
-                    <li>Abra una terminal en la carpeta del proyecto</li>
-                    <li>Ejecute: <code style="background: #f8f8f8; padding: 2px 4px; border-radius: 4px;">npm install</code></li>
-                    <li>Ejecute: <code style="background: #f8f8f8; padding: 2px 4px; border-radius: 4px;">npm run dev</code></li>
-                    <li>Visite la URL que se muestre en la terminal (usualmente http://localhost:5173)</li>
-                  </ol>
-                </div>
-                <div style="margin-top: 20px;">
-                  <a href="./public/test.html" style="background: #007A7A; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
-                    🧪 Ver Test de Datos
-                  </a>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-      }, 5000);
-    </script>
   </body>
 </html>
