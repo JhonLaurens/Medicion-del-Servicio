@@ -8,24 +8,35 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
-    "build:pages": "vite build --base=/Medicion-del-Servicio/"
+    "build:pages": "vite build --base=/Medicion-del-Servicio/",
+    "test": "jest"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "@types/papaparse": "^5.3.16",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.7.0",
     "recharts": "^2.15.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "gh-pages": "^6.1.1",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.16",
+    "ts-jest": "^29.4.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
