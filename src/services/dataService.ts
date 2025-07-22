@@ -1,6 +1,16 @@
 import Papa from 'papaparse';
 import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData } from '../types';
 
+// Asegurar que TypeScript reconozca import.meta.env
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+  readonly MODE: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
 
 export class SatisfactionDataService {
@@ -17,7 +27,8 @@ export class SatisfactionDataService {
       console.log('🚀 DataService: Starting data load process...');
     }
     try {
-      const response = await fetch('/datos.csv');
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      const response = await fetch(`${baseUrl}datos.csv`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const csvText = await response.text();
       if (isDev) {
