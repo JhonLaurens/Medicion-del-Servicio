@@ -10,7 +10,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ currentPage, onPa
   const navItems: NavItem[] = [
     { id: 'inicio', label: 'Inicio', icon: '🏠', description: 'Panel principal y resumen ejecutivo' },
     { id: 'ficha-tecnica', label: 'Ficha Técnica', icon: '📋', description: 'Metodología y especificaciones' },
-    { id: 'dashboard-general', label: 'Dashboard General', icon: '📊', description: 'KPIs y métricas principales' },
+    { id: 'metricas-completas', label: 'Métricas Completas', icon: '📈', description: 'Vista detallada de las 4 métricas principales' },
     { id: 'analisis-segmento', label: 'Análisis por Segmento', icon: '👥', description: 'Comparativo Personas vs Empresas' },
     { id: 'analisis-geografico', label: 'Análisis Geográfico', icon: '🗺️', description: 'Distribución territorial y regional' },
     { id: 'analisis-sugerencias', label: 'Análisis de Sugerencias', icon: '💡', description: 'Insights cualitativos y tendencias' },

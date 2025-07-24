@@ -191,7 +191,7 @@ const SuggestionsAnalysis: React.FC = () => {
                   fill="#3b82f6"
                   radius={[0, 4, 4, 0]}
                 >
-                  {prepareDetailedData().map((entry, index) => (
+                  {prepareDetailedData().map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Bar>

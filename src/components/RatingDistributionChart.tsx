@@ -23,7 +23,7 @@ const RatingDistributionChart: React.FC<RatingDistributionChartProps> = ({ data 
             <Tooltip
               contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px' }}
               labelStyle={{ fontWeight: 'bold', color: '#333' }}
-              formatter={(value: number, name: string, props: any) => [`${value} responses`, props.payload.name]}
+              formatter={(value: number, _name: string, props: any) => [`${value} responses`, props.payload.name]}
             />
             <Legend wrapperStyle={{paddingTop: '20px'}} />
             <Bar dataKey="value" name="Responses" radius={[4, 4, 0, 0]} />

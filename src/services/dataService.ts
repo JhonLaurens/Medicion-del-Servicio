@@ -1,113 +1,149 @@
 import Papa from 'papaparse';
 import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData } from '../types';
 
-// Asegurar que TypeScript reconozca import.meta.env
-interface ImportMetaEnv {
-  readonly BASE_URL: string;
-  readonly MODE: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
-
 export class SatisfactionDataService {
   private data: SatisfactionRecord[] = [];
+  private isDataLoaded = false;
 
-  async loadData(): Promise<SatisfactionRecord[]> {
-    if (this.data.length > 0) {
-      if (isDev) {
-        console.log('📊 DataService: Data already loaded,', this.data.length, 'records');
-      }
-      return this.data;
+  // Configuración de logging basada en el entorno
+  private isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
+
+  private log(message: string, ...args: any[]) {
+    if (this.isDev) {
+      console.log(message, ...args);
     }
-    if (isDev) {
-      console.log('🚀 DataService: Starting data load process...');
+  }
+
+  private logError(message: string, error: any) {
+    console.error(message, error);
+  }
+
+  async loadData(): Promise<void> {
+    if (this.isDataLoaded && this.data.length > 0) {
+      this.log('📊 DataService: Data already loaded,', this.data.length, 'records');
+      return;
     }
+
     try {
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      const response = await fetch(`${baseUrl}datos.csv`);
+      this.log('🚀 DataService: Starting data load process...');
+      
+      const response = await fetch('/Medicion-del-Servicio/datos.csv');
+      
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      
       const csvText = await response.text();
-      if (isDev) {
-        console.log('✅ DataService: CSV file fetched. Length:', csvText.length);
-      }      // Header mapping - matching exact CSV headers
-      const headerMap: Record<string, string> = {
+      this.log('✅ DataService: CSV file fetched. Length:', csvText.length);
+
+      // Mapeo de headers del CSV a propiedades del objeto
+      const headerMapping: Record<string, string> = {
         'En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?': 'claridad_informacion',
         '¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?': 'recomendacion',
         'En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?': 'satisfaccion_general',
         'Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?': 'lealtad',
-        'TIPO EJECUTIVO': 'TIPO_EJECUTIVO',
-        'CIUDAD': 'CIUDAD',
-        'AGENCIA': 'AGENCIA',
-        'EJECUTIVO': 'EJECUTIVO',
-        'EJECUTIVO_FINAL': 'EJECUTIVO_FINAL'
       };
-      const metricFields = [
-        'claridad_informacion',
-        'recomendacion',
-        'satisfaccion_general',
-        'lealtad'
-      ];      const parsed = Papa.parse(csvText, {
+
+      const parsed = Papa.parse(csvText, {
         header: true,
         delimiter: ';',
         skipEmptyLines: true,
         transformHeader: (header: string) => {
           const trimmedHeader = header.trim();
-          const mappedHeader = headerMap[trimmedHeader] || trimmedHeader;
-          if (isDev && headerMap[trimmedHeader]) {
-            console.log('🔄 Header mapped:', trimmedHeader, '->', mappedHeader);
+          const mappedHeader = headerMapping[trimmedHeader] || trimmedHeader;
+          
+          if (this.isDev && headerMapping[trimmedHeader]) {
+            this.log('🔄 Header mapped:', trimmedHeader, '->', mappedHeader);
           }
+          
           return mappedHeader;
         },
-        transform: (value: string, header: string) => {
-          if (metricFields.includes(header)) {
-            const num = parseInt(value);
+        transform: (value: string, field: string) => {
+          if (['claridad_informacion', 'recomendacion', 'satisfaccion_general', 'lealtad'].includes(field)) {
+            const num = parseFloat(value);
             return isNaN(num) ? null : num;
           }
-          return value?.trim();
+          return value;
         }
       });
 
-      if (isDev) {
-        console.log('📋 DataService: Parsed headers:', Object.keys(parsed.data[0] || {}));
-        console.log('📊 DataService: Total parsed rows:', parsed.data.length);
-      }      // Filtrar registros válidos
-      const filteredData = (parsed.data as any[]).filter(row => {
-        const hasId = row.ID && row.ID.trim() !== '';
-        const hasSegmento = row.SEGMENTO && row.SEGMENTO.trim() !== '';
-        const hasMetrics = metricFields.some(f => {
-          const value = row[f];
-          return value !== null && value !== undefined && value !== '' && !isNaN(Number(value));
-        });
-        return hasId && hasSegmento && hasMetrics;
-      }) as SatisfactionRecord[];
+      if (parsed.errors.length > 0) {
+        this.logError('❌ DataService: CSV parsing errors:', parsed.errors);
+      }
 
-      this.data = filteredData;
-      
-      if (isDev) {
-        console.log('✅ DataService: Loaded', this.data.length, 'valid records from', parsed.data.length, 'total rows');
-        if (this.data.length > 0) {
-          console.log('📄 DataService: First record example:', this.data[0]);
-          console.log('📊 DataService: Available fields:', Object.keys(this.data[0]));
-        } else {
-          console.log('⚠️ DataService: No valid records found. Sample row:', parsed.data[0]);
-        }
+      this.log('📋 DataService: Parsed headers:', Object.keys(parsed.data[0] || {}));
+      this.log('📊 DataService: Total parsed rows:', parsed.data.length);
+
+      // Filtrar registros válidos con mejor validación
+      this.data = (parsed.data as any[])
+        .filter(row => this.isValidRecord(row))
+        .map(row => this.sanitizeRecord(row));
+
+      if (this.data.length > 0) {
+        this.log('✅ DataService: Loaded', this.data.length, 'valid records from', parsed.data.length, 'total rows');
+        this.log('📄 DataService: First record example:', this.data[0]);
+        this.log('📊 DataService: Available fields:', Object.keys(this.data[0]));
+        this.isDataLoaded = true;
+      } else {
+        this.logError('⚠️ DataService: No valid records found. Sample row:', parsed.data[0]);
+        throw new Error('No valid data records found in CSV file');
       }
-      return this.data;
+
     } catch (error) {
-      if (isDev) {
-        console.error('❌ DataService: Error loading CSV data:', error);
-      }
-      return [];
+      this.isDataLoaded = false;
+      this.logError('❌ DataService: Error loading CSV data:', error);
+      throw error;
     }
+  }
+
+  private isValidRecord(row: any): boolean {
+    if (!row || typeof row !== 'object') return false;
+    
+    // Verificar campos obligatorios
+    const requiredFields = ['ID', 'SEGMENTO'];
+    for (const field of requiredFields) {
+      if (!row[field] || row[field].toString().trim() === '') {
+        return false;
+      }
+    }
+
+    // Verificar que al menos una métrica tenga valor válido
+    const metrics = ['claridad_informacion', 'recomendacion', 'satisfaccion_general', 'lealtad'];
+    return metrics.some(metric => {
+      const value = row[metric];
+      return value !== null && value !== undefined && value !== '' && !isNaN(Number(value));
+    });
+  }
+
+  private sanitizeRecord(row: any): SatisfactionRecord {
+    return {
+      ID: String(row.ID || '').trim(),
+      DATE_MODIFIED: String(row.DATE_MODIFIED || '').trim(),
+      IP_ADDRESS: String(row.IP_ADDRESS || '').trim(),
+      EMAIL: String(row.EMAIL || '').trim(),
+      NOMBRE: String(row.NOMBRE || '').trim(),
+      CEDULA: String(row.CEDULA || '').trim(),
+      SEGMENTO: (row.SEGMENTO === 'EMPRESARIAL' ? 'EMPRESARIAL' : 'PERSONAS') as 'PERSONAS' | 'EMPRESARIAL',
+      CIUDAD: String(row.CIUDAD || '').trim(),
+      AGENCIA: String(row.AGENCIA || '').trim(),
+      TIPO_EJECUTIVO: String(row.TIPO_EJECUTIVO || '').trim(),
+      EJECUTIVO: String(row.EJECUTIVO || '').trim(),
+      EJECUTIVO_FINAL: String(row.EJECUTIVO_FINAL || '').trim(),
+      claridad_informacion: this.sanitizeNumericValue(row.claridad_informacion),
+      recomendacion: this.sanitizeNumericValue(row.recomendacion),
+      satisfaccion_general: this.sanitizeNumericValue(row.satisfaccion_general),
+      lealtad: this.sanitizeNumericValue(row.lealtad),
+    };
+  }
+
+  private sanitizeNumericValue(value: any): number {
+    if (value === null || value === undefined || value === '') return 0;
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return 0;
+    return Math.max(1, Math.min(5, Math.round(num))); // Asegurar rango 1-5
   }
 
   getTechnicalInfo(): TechnicalInfo {
     return {
-      objetivoGeneral: "Conocer la satisfacción de los clientes de los segmentos Personas y Empresas con el servicio de Coltefinanciera",
+      objetivoGeneral: "Conocer la satisfacción de los clientes de los segmentos Personas y Empresas con el servicio de Coltefinanciera para los períodos 2024-2 y 2025-1",
       universoTotal: 24067,
       totalEncuestados: this.data.length,
       porcentajeRespuesta: parseFloat(((this.data.length / 24067) * 100).toFixed(2)),
@@ -120,74 +156,113 @@ export class SatisfactionDataService {
         "Satisfacción General",
         "Nivel de Recomendación",
         "Lealtad del Cliente"
-      ]
+      ],
+      periodosMediacion: "2024-2 y 2025-1",
+      notaMetodologica: "La encuesta se realizó en 2025-1 pero representa la medición de los períodos 2024-2 y 2025-1"
     };
   }
 
   getKPIData(): KPIData[] {
-    const metrics = [
-      { key: 'claridad_informacion', name: 'Claridad de la Información (Atención)' },
-      { key: 'satisfaccion_general', name: 'Satisfacción General' },
-      { key: 'lealtad', name: 'Lealtad' },
-      { key: 'recomendacion', name: 'Recomendación' }
-    ];
-    
-    if (isDev) {
-      console.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
-      console.log('📊 getKPIData: Total data records:', this.data.length);
+    if (!this.isDataLoaded || this.data.length === 0) {
+      this.logError('⚠️ DataService: No data loaded for KPI calculation', new Error('No data available'));
+      return [];
     }
-    
+
+    const metrics = [
+      { key: 'claridad_informacion', name: 'Claridad de Información' },
+      { key: 'recomendacion', name: 'Recomendación (NPS)' },
+      { key: 'satisfaccion_general', name: 'Satisfacción General' },
+      { key: 'lealtad', name: 'Lealtad' }
+    ];
+
+    this.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
+    this.log('📊 getKPIData: Total data records:', this.data.length);
+
     const result = metrics.map(metric => {
-      const allData = this.data.filter(d => d[metric.key as keyof SatisfactionRecord] !== null && d[metric.key as keyof SatisfactionRecord] !== undefined);
-      const personasData = allData.filter(d => d.SEGMENTO === 'PERSONAS');
-      const empresarialData = allData.filter(d => d.SEGMENTO === 'EMPRESARIAL');
+      try {
+        // Filtrar datos válidos para esta métrica
+        const allData = this.data.filter(d => {
+          const value = d[metric.key as keyof SatisfactionRecord];
+          return value !== null && value !== undefined && value !== 0;
+        });
+
+        this.log(`📊 getKPIData: Processing ${metric.name}:`, {
+          totalRecords: allData.length,
+          metric: metric.key
+        });
+
+        const consolidado = this.calculateStats(allData, metric.key);
+        const personas = this.calculateStats(
+          allData.filter(d => d.SEGMENTO === 'PERSONAS'), 
+          metric.key
+        );
+        const empresarial = this.calculateStats(
+          allData.filter(d => d.SEGMENTO === 'EMPRESARIAL'), 
+          metric.key
+        );
+
+        return {
+          metric: metric.name,
+          consolidado,
+          personas,
+          empresarial
+        };
+      } catch (error) {
+        this.logError(`❌ Error processing metric ${metric.name}:`, error);
+        return {
+          metric: metric.name,
+          consolidado: { average: 0, rating5: 0, rating4: 0, rating123: 0 },
+          personas: { average: 0, rating5: 0, rating4: 0, rating123: 0 },
+          empresarial: { average: 0, rating5: 0, rating4: 0, rating123: 0 }
+        };
+      }
+    });
+
+    this.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
+    return result;
+  }
+
+  private calculateStats(data: SatisfactionRecord[], metricKey: string) {
+    if (!data || data.length === 0) {
+      return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+    }
+
+    try {
+      const values = data
+        .map(d => d[metricKey as keyof SatisfactionRecord] as number)
+        .filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0);
+
+      if (values.length === 0) {
+        return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+      }
+
+      const average = values.reduce((sum, val) => sum + val, 0) / values.length;
+      const total = values.length;
       
-      if (isDev) {
-        console.log(`📊 getKPIData: Processing ${metric.name}:`, {
-          total: allData.length,
-          personas: personasData.length,
-          empresarial: empresarialData.length
+      const rating5Count = values.filter(v => v === 5).length;
+      const rating4Count = values.filter(v => v === 4).length;
+      const rating123Count = values.filter(v => v >= 1 && v <= 3).length;
+
+      // Manejar casos de muestra pequeña
+      if (total < 10) {
+        this.log(`📊 calculateStats for small sample (${values.length} records):`, {
+          average: Number(average.toFixed(2)),
+          rating5: Number(((rating5Count / total) * 100).toFixed(1)),
+          rating4: Number(((rating4Count / total) * 100).toFixed(1)),
+          rating123: Number(((rating123Count / total) * 100).toFixed(1))
         });
       }
-      const calculateStats = (data: SatisfactionRecord[], metricKey: string) => {
-        if (data.length === 0) return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
-        const values = data.map(d => d[metricKey as keyof SatisfactionRecord] as number).filter(v => v !== null && v !== undefined);
-        
-        if (values.length === 0) return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
-        
-        const average = parseFloat((values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(2));
-        
-        // Para muestras pequeñas, usar más decimales para evitar redondeo a 0
-        const precision = values.length < 50 ? 2 : 1;
-        const rating5 = parseFloat(((values.filter(v => v === 5).length / values.length) * 100).toFixed(precision));
-        const rating4 = parseFloat(((values.filter(v => v === 4).length / values.length) * 100).toFixed(precision));
-        const rating123 = parseFloat(((values.filter(v => v <= 3).length / values.length) * 100).toFixed(precision));
-        
-        if (isDev && values.length < 50) {
-          console.log(`📊 calculateStats for small sample (${values.length} records):`, {
-            values,
-            rating5Count: values.filter(v => v === 5).length,
-            rating4Count: values.filter(v => v === 4).length,
-            rating123Count: values.filter(v => v <= 3).length,
-            calculated: { average, rating5, rating4, rating123 }
-          });
-        }
-        
-        return { average, rating5, rating4, rating123 };
-      };
+
       return {
-        metric: metric.name,
-        consolidado: calculateStats(allData, metric.key),
-        personas: calculateStats(personasData, metric.key),
-        empresarial: calculateStats(empresarialData, metric.key)
+        average: Number(average.toFixed(2)),
+        rating5: Number(((rating5Count / total) * 100).toFixed(1)),
+        rating4: Number(((rating4Count / total) * 100).toFixed(1)),
+        rating123: Number(((rating123Count / total) * 100).toFixed(1))
       };
-    });
-    
-    if (isDev) {
-      console.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
+    } catch (error) {
+      this.logError(`❌ Error calculating stats for ${metricKey}:`, error);
+      return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
     }
-    
-    return result;
   }
 
   getCityData(): GeographicData[] {

@@ -31,8 +31,8 @@ const ManagerParticipationReport: React.FC = () => {
     const loadData = async () => {
       try {
         console.log('🚀 ManagerParticipationReport: Loading data...');
-        const records = await dataService.loadData();
-        console.log('✅ ManagerParticipationReport: Data loaded, total records:', records.length);
+        await dataService.loadData();
+        console.log('✅ ManagerParticipationReport: Data loaded successfully');
         
         // Process manager data with exact table values
         processManagerData();

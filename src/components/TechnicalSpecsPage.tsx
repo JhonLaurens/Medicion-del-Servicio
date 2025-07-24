@@ -119,6 +119,13 @@ const TechnicalSpecsPage: React.FC = () => {
                         <span className="text-gray-700 font-medium">Método de Recolección</span>
                         <span className="text-gray-800 font-bold">{technicalInfo.metodoRecoleccion}</span>
                       </div>
+                      
+                      {technicalInfo.periodosMediacion && (
+                        <div className="flex justify-between items-center py-3 px-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                          <span className="text-gray-700 font-medium">Períodos de Medición</span>
+                          <span className="text-gray-800 font-bold">{technicalInfo.periodosMediacion}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -225,6 +232,11 @@ const TechnicalSpecsPage: React.FC = () => {
               <p className="text-sm text-gray-600 leading-relaxed">
                 <strong>Nota Metodológica:</strong> Este estudio fue diseñado siguiendo las mejores prácticas en investigación de mercados 
                 y satisfacción del cliente, garantizando la validez y confiabilidad de los resultados obtenidos.
+                {technicalInfo.notaMetodologica && (
+                  <span className="block mt-2 text-amber-700 bg-amber-50 p-2 rounded">
+                    <strong>Períodos de Medición:</strong> {technicalInfo.notaMetodologica}
+                  </span>
+                )}
               </p>
             </div>
           </div>

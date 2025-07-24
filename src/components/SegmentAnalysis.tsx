@@ -618,6 +618,9 @@ const SegmentAnalysis: React.FC = () => {
                 <p><strong>Segmentos:</strong> Personas Naturales vs. Empresariales</p>
                 <p><strong>Período:</strong> {SURVEY_INFO.period}</p>
                 <p><strong>Universo:</strong> {SURVEY_INFO.universeTotal.toLocaleString()} clientes</p>
+                {SURVEY_INFO.measurementPeriods && (
+                  <p><strong>Períodos de Medición:</strong> {SURVEY_INFO.measurementPeriods}</p>
+                )}
               </div>
             </div>
             

@@ -82,6 +82,8 @@ export interface TechnicalInfo {
   periodoCampo: string;
   metodoRecoleccion: string;
   metricasEvaluadas: string[];
+  periodosMediacion?: string;
+  notaMetodologica?: string;
 }
 
 // Additional types for Dashboard compatibility

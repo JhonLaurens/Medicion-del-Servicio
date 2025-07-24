@@ -117,7 +117,7 @@ export const getOpenTextQuestions = (): QuestionMapping[] => {
  * Información técnica sobre la encuesta
  */
 export const SURVEY_INFO = {
-  title: 'Encuesta de Satisfacción del Cliente 2024-2025',
+  title: 'Encuesta de Satisfacción del Cliente 2024-2 y 2025-1',
   period: '15 de abril al 01 de junio de 2025',
   methodology: 'Web, mediante SurveyMonkey',
   sampleSize: 1445,
@@ -126,7 +126,9 @@ export const SURVEY_INFO = {
   marginOfError: '±2,50%',
   responseRate: '6%',
   segments: ['Personas Naturales', 'Empresas'],
-  channels: ['Presencial (Agencias)', 'Digital', 'Telefónico']
+  channels: ['Presencial (Agencias)', 'Digital', 'Telefónico'],
+  measurementPeriods: '2024-2 y 2025-1',
+  note: 'La encuesta se realizó en 2025-1 pero representa la medición de los períodos 2024-2 y 2025-1'
 };
 
 export default SURVEY_QUESTIONS;
