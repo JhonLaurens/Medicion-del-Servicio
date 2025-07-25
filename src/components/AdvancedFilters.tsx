@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, X, Calendar, Building, Users, BarChart3 } from 'lucide-react';
+import { Filter, X, Calendar, Users, BarChart3 } from 'lucide-react';
 
 interface FilterOption {
   value: string;

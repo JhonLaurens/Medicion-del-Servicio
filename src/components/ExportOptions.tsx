@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileText, Table, Image, Loader2 } from 'lucide-react';
+import { FileText, Table, Image, Loader2 } from 'lucide-react';
 
 interface ExportData {
   title: string;

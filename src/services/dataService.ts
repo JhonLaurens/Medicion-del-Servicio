@@ -143,7 +143,7 @@ export class SatisfactionDataService {
 
   getTechnicalInfo(): TechnicalInfo {
     return {
-      objetivoGeneral: "Conocer la satisfacción de los clientes de los segmentos Personas y Empresas con el servicio de Coltefinanciera para los períodos 2024-2 y 2025-1",
+      objetivoGeneral: "Evaluar de manera integral la satisfacción de los clientes de Coltefinanciera en los segmentos Personas y Empresarial durante los períodos 2024-2 y 2025-1, mediante la medición de indicadores clave como claridad de la información en atención, satisfacción general del servicio, nivel de recomendación (NPS) y lealtad del cliente. Este estudio busca identificar fortalezas y oportunidades de mejora en la experiencia del cliente, proporcionando insights estratégicos para la toma de decisiones orientadas al fortalecimiento de la relación comercial y la optimización de los procesos de atención al cliente en todas las agencias a nivel nacional.",
       universoTotal: 24067,
       totalEncuestados: this.data.length,
       porcentajeRespuesta: parseFloat(((this.data.length / 24067) * 100).toFixed(2)),
@@ -163,7 +163,10 @@ export class SatisfactionDataService {
   }
 
   getKPIData(): KPIData[] {
+    console.log('🚀 getKPIData: MÉTODO INICIADO');
+    
     if (!this.isDataLoaded || this.data.length === 0) {
+      console.error('⚠️ DataService: No data loaded for KPI calculation');
       this.logError('⚠️ DataService: No data loaded for KPI calculation', new Error('No data available'));
       return [];
     }
@@ -175,15 +178,21 @@ export class SatisfactionDataService {
       { key: 'lealtad', name: 'Lealtad' }
     ];
 
+    console.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
+    console.log('📊 getKPIData: Total data records:', this.data.length);
     this.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
     this.log('📊 getKPIData: Total data records:', this.data.length);
 
     const result = metrics.map(metric => {
       try {
-        // Filtrar datos válidos para esta métrica
-        const allData = this.data.filter(d => {
+        // Incluir todos los registros, convirtiendo valores vacíos/nulos a 0
+        const allData = this.data.map(d => {
           const value = d[metric.key as keyof SatisfactionRecord];
-          return value !== null && value !== undefined && value !== 0;
+          // Si el valor está vacío, es null, undefined o NaN, usar 0
+          if (value === '' || value === null || value === undefined || (typeof value === 'number' && isNaN(value))) {
+            return { ...d, [metric.key]: 0 };
+          }
+          return d;
         });
 
         this.log(`📊 getKPIData: Processing ${metric.name}:`, {
@@ -211,29 +220,38 @@ export class SatisfactionDataService {
         this.logError(`❌ Error processing metric ${metric.name}:`, error);
         return {
           metric: metric.name,
-          consolidado: { average: 0, rating5: 0, rating4: 0, rating123: 0 },
-          personas: { average: 0, rating5: 0, rating4: 0, rating123: 0 },
-          empresarial: { average: 0, rating5: 0, rating4: 0, rating123: 0 }
+          consolidado: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 },
+          personas: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 },
+          empresarial: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 }
         };
       }
     });
 
+    console.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
+    console.log('📊 getKPIData: RESULTADO FINAL:', result.length, 'métricas generadas');
+    console.log('📊 getKPIData: MÉTRICAS DETALLADAS:', result.map(r => ({
+      metric: r.metric,
+      consolidado: r.consolidado.average,
+      personas: r.personas.average,
+      empresarial: r.empresarial.average
+    })));
+    
     this.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
     return result;
   }
 
   private calculateStats(data: SatisfactionRecord[], metricKey: string) {
     if (!data || data.length === 0) {
-      return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+      return { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 };
     }
 
     try {
       const values = data
         .map(d => d[metricKey as keyof SatisfactionRecord] as number)
-        .filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0);
+        .filter(v => v !== null && v !== undefined && !isNaN(v)); // Removido && v > 0
 
       if (values.length === 0) {
-        return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+        return { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 };
       }
 
       const average = values.reduce((sum, val) => sum + val, 0) / values.length;
@@ -249,7 +267,8 @@ export class SatisfactionDataService {
           average: Number(average.toFixed(2)),
           rating5: Number(((rating5Count / total) * 100).toFixed(1)),
           rating4: Number(((rating4Count / total) * 100).toFixed(1)),
-          rating123: Number(((rating123Count / total) * 100).toFixed(1))
+          rating123: Number(((rating123Count / total) * 100).toFixed(1)),
+          total
         });
       }
 
@@ -257,11 +276,12 @@ export class SatisfactionDataService {
         average: Number(average.toFixed(2)),
         rating5: Number(((rating5Count / total) * 100).toFixed(1)),
         rating4: Number(((rating4Count / total) * 100).toFixed(1)),
-        rating123: Number(((rating123Count / total) * 100).toFixed(1))
+        rating123: Number(((rating123Count / total) * 100).toFixed(1)),
+        total
       };
     } catch (error) {
       this.logError(`❌ Error calculating stats for ${metricKey}:`, error);
-      return { average: 0, rating5: 0, rating4: 0, rating123: 0 };
+      return { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 };
     }
   }
 

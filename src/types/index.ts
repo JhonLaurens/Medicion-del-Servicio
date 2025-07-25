@@ -24,18 +24,21 @@ export interface KPIData {
     rating5: number;
     rating4: number;
     rating123: number;
+    total: number;
   };
   personas: {
     average: number;
     rating5: number;
     rating4: number;
     rating123: number;
+    total: number;
   };
   empresarial: {
     average: number;
     rating5: number;
     rating4: number;
     rating123: number;
+    total: number;
   };
 }
 

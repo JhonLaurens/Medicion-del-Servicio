@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { satisfactionDataService } from '../services/dataService';
 import { GeographicData } from '../types';
 
@@ -15,7 +15,8 @@ const GeographicAnalysis: React.FC = () => {
         await satisfactionDataService.loadData();
         const data = satisfactionDataService.getCityData();
         setCityData(data);
-        if (data.length > 0) {
+        // Establecer la primera ciudad como seleccionada por defecto
+        if (data.length > 0 && !selectedCity) {
           setSelectedCity(data[0].ciudad);
         }
       } catch (error) {
@@ -79,20 +80,38 @@ const GeographicAnalysis: React.FC = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-4 border-2 border-gray-200 rounded-xl shadow-2xl max-w-xs">
-          <p className="font-bold text-gray-800 mb-2 text-center border-b pb-2">{label}</p>
-          <div className="space-y-2">
+        <div className="bg-white p-4 border-2 border-gray-200 rounded-xl shadow-2xl max-w-sm">
+          <p className="font-bold text-gray-800 mb-3 text-center border-b pb-2 text-lg">{label}</p>
+          <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Promedio:</span>
-              <span className="text-lg font-bold text-brand-primary">
+              <span className="text-sm text-gray-600">Ciudad ({selectedCityData.ciudad}):</span>
+              <span className="text-xl font-bold text-blue-600">
                 {typeof data.value === 'number' ? data.value.toFixed(2) : '0.00'}
               </span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Promedio Nacional:</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {nationalAverage.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Diferencia:</span>
+              <span className={`text-lg font-bold ${
+                data.value > nationalAverage ? 'text-green-600' : 
+                data.value < nationalAverage ? 'text-red-600' : 'text-yellow-600'
+              }`}>
+                {data.value > nationalAverage ? '+' : ''}{(data.value - nationalAverage).toFixed(2)}
+              </span>
+            </div>
             <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-              <span className="text-xs text-gray-600">vs. Nacional:</span>
+              <span className="text-sm text-gray-600">Comparación:</span>
               <div className="flex items-center space-x-2">
                 {getComparisonIcon(data.comparison)}
-                <span className="text-xs text-gray-600">
+                <span className={`text-sm font-semibold ${
+                  data.comparison === 'higher' ? 'text-green-600' : 
+                  data.comparison === 'lower' ? 'text-red-600' : 'text-yellow-600'
+                }`}>
                   {data.comparison === 'higher' ? 'Superior' : 
                    data.comparison === 'lower' ? 'Inferior' : 'Similar'}
                 </span>
@@ -380,39 +399,57 @@ const GeographicAnalysis: React.FC = () => {
               {/* Gráfico de Métricas */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Desglose por Métrica vs. Promedio Nacional</h3>
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <div className="h-80">
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg">
+                  <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={prepareChartData(selectedCityData)}
-                        layout="horizontal"
-                        margin={{ top: 20, right: 30, left: 120, bottom: 5 }}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                        barCategoryGap="20%"
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.7} />
                         <XAxis 
-                          type="number" 
-                          domain={[0, 5]} 
-                          tick={{ fontSize: 12, fill: '#6b7280' }}
-                          label={{ value: 'Puntuación (1-5)', position: 'insideBottom', offset: -10 }}
+                          dataKey="metric" 
+                          tick={{ fontSize: 12, fill: '#374151' }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          interval={0}
                         />
                         <YAxis 
-                          type="category" 
-                          dataKey="metric" 
-                          width={120}
-                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          domain={[0, 5]} 
+                          tick={{ fontSize: 12, fill: '#374151' }}
+                          label={{ value: 'Puntuación (1-5)', angle: -90, position: 'insideLeft' }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar 
                           dataKey="value" 
-                          fill="#3b82f6"
-                          radius={[0, 4, 4, 0]}
+                          radius={[4, 4, 0, 0]}
+                          stroke="#ffffff"
+                          strokeWidth={2}
                         >
                           {prepareChartData(selectedCityData).map((entry, index) => (
-                            <Bar key={`cell-${index}`} fill={getComparisonColor(entry.comparison)} dataKey="value" />
+                            <Cell key={`cell-${index}`} fill={getComparisonColor(entry.comparison)} />
                           ))}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Leyenda de colores */}
+                  <div className="mt-4 flex justify-center space-x-6 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-green-500 rounded"></div>
+                      <span className="text-gray-600">Superior al promedio</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                      <span className="text-gray-600">Similar al promedio</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-red-500 rounded"></div>
+                      <span className="text-gray-600">Inferior al promedio</span>
+                    </div>
                   </div>
                 </div>
               </div>

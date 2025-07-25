@@ -37,7 +37,7 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
     }
   }, []);
 
-  const showTooltip = useCallback((event: React.MouseEvent) => {
+  const showTooltip = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }

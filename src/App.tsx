@@ -112,7 +112,7 @@ const App: React.FC = () => {
         case 'inicio':
           return <HomePage onNavigate={handlePageChange} />;
         case 'ficha-tecnica':
-          return <TechnicalSpecsPage />;
+          return <TechnicalSpecsPage technicalInfo={satisfactionDataService.getTechnicalInfo()} />;
         case 'dashboard-general':
           // Redirigir dashboard-general a métricas completas
           return <MetricsOverview />;

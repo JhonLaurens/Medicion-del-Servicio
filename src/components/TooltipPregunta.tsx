@@ -13,7 +13,10 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  const updatePosition = useCallback((event: MouseEvent) => {
+  const showTooltip = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
@@ -35,15 +38,8 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
       
       setPosition({ x, y });
     }
-  }, []);
-
-  const showTooltip = useCallback((event: React.MouseEvent) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    updatePosition(event.nativeEvent);
     setIsVisible(true);
-  }, [updatePosition]);
+  }, []);
 
   const hideTooltip = useCallback(() => {
     if (!isSticky) {

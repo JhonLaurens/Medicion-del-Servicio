@@ -12,6 +12,7 @@ import {
   Line,
   BarChart,
   Bar,
+  Cell,
 } from "recharts";
 import { HelpCircle, TrendingUp, Target, Award } from "lucide-react";
 import Glossary from "./Glossary";
@@ -110,24 +111,33 @@ const MetricsOverview: React.FC = () => {
 
   // Función para obtener datos históricos de evolución
   const getHistoricalData = () => {
-    // Calcular datos actuales de 2024-2025 desde el CSV
-    const currentData = kpiData.filter(
-      (item) =>
-        item.metric === "Satisfacción General" ||
-        item.metric ===
-          "En general, ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?"
-    );
+    // Usar la misma lógica que la metodología para calcular los promedios
+    const metricsData = prepareMetricsData();
+    
+    // Calcular promedios usando la misma lógica que en la metodología
+    const personasActual = metricsData.length > 0 
+      ? metricsData.reduce((sum, m) => sum + m.personas, 0) / metricsData.length
+      : 4.31;
+    
+    const empresasActual = metricsData.length > 0 
+      ? metricsData.reduce((sum, m) => sum + m.empresas, 0) / metricsData.length
+      : 3.85;
 
-    const consolidadoActual =
-      currentData.length > 0
-        ? currentData[0].consolidado?.average || 4.38
-        : 4.38;
-    const personasActual =
-      currentData.length > 0 ? currentData[0].personas?.average || 4.38 : 4.38;
-    const empresasActual =
-      currentData.length > 0
-        ? currentData[0].empresarial?.average || 4.08
-        : 4.08;
+    // CORRECCIÓN: Usar la misma lógica que la metodología (m.consolidado)
+    const consolidadoActual = metricsData.length > 0 
+      ? metricsData.reduce((sum, m) => sum + m.consolidado, 0) / metricsData.length
+      : 4.05;
+
+    // Log para verificar datos (solo en desarrollo)
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log('📊 Datos históricos 2024-2025 (Corregido):', {
+        consolidado: consolidadoActual.toFixed(2),
+        personas: personasActual.toFixed(2),
+        empresas: empresasActual.toFixed(2),
+        source: metricsData.length > 0 ? 'Promedio de m.consolidado (igual que metodología)' : 'Valores por defecto',
+        metricsCount: metricsData.length
+      });
+    }
 
     // Datos históricos basados en la presentación (2020-2023) y datos reales del CSV (2024-2025)
     return [
@@ -363,7 +373,7 @@ const MetricsOverview: React.FC = () => {
       </div>
 
       {/* Estadísticas Generales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 lg:gap-6">
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
@@ -412,6 +422,60 @@ const MetricsOverview: React.FC = () => {
         </div>
       </div>
 
+      {/* Tarjeta explicativa del cálculo - Separada y mejorada para PC */}
+      <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-xl shadow-lg p-6 border border-indigo-200">
+        <div className="text-center">
+          <div className="text-xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
+            <span className="text-2xl">📊</span>
+            <span>Metodología de Cálculo</span>
+          </div>
+          
+          {/* Promedios actuales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
+              <div className="text-2xl font-bold text-blue-600">
+                {metricsData.length > 0
+                  ? (metricsData.reduce((sum, m) => sum + m.personas, 0) / metricsData.length).toFixed(2)
+                  : "0.00"}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Promedio Personas</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-purple-100 shadow-sm">
+              <div className="text-2xl font-bold text-purple-600">
+                {metricsData.length > 0
+                  ? (metricsData.reduce((sum, m) => sum + m.empresas, 0) / metricsData.length).toFixed(2)
+                  : "0.00"}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Promedio Empresas</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-green-100 shadow-sm">
+              <div className="text-2xl font-bold text-green-600">
+                {metricsData.length > 0
+                  ? (metricsData.reduce((sum, m) => sum + m.consolidado, 0) / metricsData.length).toFixed(2)
+                  : "0.00"}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Promedio General</div>
+            </div>
+          </div>
+
+          {/* Explicación metodológica */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white rounded-lg p-4 border border-indigo-100">
+              <div className="font-semibold text-blue-600 mb-2">Personas:</div>
+              <div className="text-gray-700">Promedio de respuestas del segmento "Personas Naturales"</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-indigo-100">
+              <div className="font-semibold text-purple-600 mb-2">Empresas:</div>
+              <div className="text-gray-700">Promedio de respuestas del segmento "Empresas"</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-indigo-100">
+              <div className="font-semibold text-green-600 mb-2">Promedio General:</div>
+              <div className="text-gray-700">Promedio de los promedios de cada métrica individual</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Las 4 Métricas Principales - Layout Horizontal */}
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-8">
         <div className="flex items-center justify-between mb-6">
@@ -436,13 +500,15 @@ const MetricsOverview: React.FC = () => {
                 metric.priority
               )}`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="font-bold text-lg text-gray-800 leading-tight">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg text-gray-800 leading-tight flex-1 pr-2">
                   {metric.metric}
                 </h3>
-                <span className="text-2xl">
-                  {getPriorityIcon(metric.priority)}
-                </span>
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8">
+                  <span className="text-2xl">
+                    {getPriorityIcon(metric.priority)}
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -524,11 +590,13 @@ const MetricsOverview: React.FC = () => {
                 }}
                 formatter={(value: any, name: string) => [
                   typeof value === "number" ? value.toFixed(2) : value,
-                  name === "consolidado"
-                    ? "Consolidado"
-                    : name === "personas"
+                  name === "Consolidado"
+                    ? "Promedio General"
+                    : name === "Personas"
                     ? "Personas"
-                    : "Empresas",
+                    : name === "Empresas"
+                    ? "Empresas"
+                    : name,
                 ]}
               />
               <Legend />
@@ -537,7 +605,7 @@ const MetricsOverview: React.FC = () => {
                 dataKey="consolidado"
                 stroke="#2563eb"
                 strokeWidth={3}
-                name="Consolidado"
+                name="Promedio General"
                 dot={{ fill: "#2563eb", strokeWidth: 2, r: 6 }}
               />
               <Line
@@ -566,7 +634,7 @@ const MetricsOverview: React.FC = () => {
               📈 Tendencia General
             </h4>
             <p className="text-sm text-blue-700">
-              El indicador consolidado muestra una tendencia positiva desde
+              El promedio general muestra una tendencia positiva desde
               2020, con un crecimiento sostenido hasta 2023.
             </p>
           </div>
@@ -637,11 +705,11 @@ const MetricsOverview: React.FC = () => {
                           "Calificación",
                         ]}
                       />
-                      <Bar
-                        dataKey="value"
-                        fill="#2563eb"
-                        radius={[4, 4, 0, 0]}
-                      />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
