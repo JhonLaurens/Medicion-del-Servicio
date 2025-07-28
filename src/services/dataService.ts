@@ -6,7 +6,32 @@ export class SatisfactionDataService {
   private isDataLoaded = false;
 
   // Configuración de logging basada en el entorno
-  private isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
+  private isDev = this.detectDevelopmentMode();
+
+  private detectDevelopmentMode(): boolean {
+    // Múltiples formas de detectar el modo de desarrollo
+    try {
+      // Método 1: import.meta.env
+      if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+        return (import.meta as any).env.MODE === 'development' || (import.meta as any).env.DEV === true;
+      }
+      
+      // Método 2: hostname
+      if (typeof window !== 'undefined') {
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      }
+      
+      // Método 3: puerto de desarrollo
+      if (typeof window !== 'undefined') {
+        return window.location.port === '5173' || window.location.port === '3000';
+      }
+      
+      return false;
+    } catch (error) {
+      console.warn('Error detecting development mode:', error);
+      return false;
+    }
+  }
 
   private log(message: string, ...args: any[]) {
     if (this.isDev) {
@@ -26,13 +51,42 @@ export class SatisfactionDataService {
 
     try {
       this.log('🚀 DataService: Starting data load process...');
+      this.log('🔍 DataService: Development mode:', this.isDev);
       
-      const response = await fetch('/Medicion-del-Servicio/datos.csv');
+      // Intentar múltiples rutas para el CSV
+      const csvPaths = [
+        '/datos.csv',                           // Ruta de desarrollo
+        '/Medicion-del-Servicio/datos.csv',    // Ruta de producción
+        './datos.csv',                         // Ruta relativa
+        '/public/datos.csv'                    // Ruta alternativa
+      ];
       
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      let csvText = '';
+      let successfulPath = '';
       
-      const csvText = await response.text();
-      this.log('✅ DataService: CSV file fetched. Length:', csvText.length);
+      for (const csvPath of csvPaths) {
+        try {
+          this.log('📁 DataService: Trying CSV path:', csvPath);
+          const response = await fetch(csvPath);
+          
+          if (response.ok) {
+            csvText = await response.text();
+            successfulPath = csvPath;
+            this.log('✅ DataService: CSV loaded successfully from:', csvPath);
+            break;
+          } else {
+            this.log('❌ DataService: Failed to load from', csvPath, '- Status:', response.status);
+          }
+        } catch (pathError) {
+          this.log('❌ DataService: Error trying path', csvPath, ':', pathError);
+        }
+      }
+      
+      if (!csvText) {
+        throw new Error('No se pudo cargar el archivo CSV desde ninguna ruta disponible');
+      }
+      
+      this.log('✅ DataService: CSV file fetched from', successfulPath, '. Length:', csvText.length);
 
       // Mapeo de headers del CSV a propiedades del objeto
       const headerMapping: Record<string, string> = {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { IMAGES } from "../utils/assets";
 
 interface HomePageProps {
   onNavigate?: (page: string) => void;
@@ -13,7 +14,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     const img = new Image();
     img.onload = () => setImageLoaded(true);
     img.onerror = () => setImageError(true);
-    img.src = "/Medicion-del-Servicio/images/logo.jpg";
+    img.src = IMAGES.logo;
   }, []);
 
   const handleNavigation = (page: string) => {
@@ -101,7 +102,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               </div>
             ) : (
               <img
-                src="/Medicion-del-Servicio/images/logo.jpg"
+                src={IMAGES.logo}
                 alt="Logo Coltefinanciera"
                 className={`w-28 h-28 object-contain mx-auto rounded-xl shadow-2xl border-4 border-white/20 transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'

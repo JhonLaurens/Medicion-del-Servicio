@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { IMAGES } from "../utils/assets";
 
 interface HeaderProps {
   currentPage?: string;
@@ -15,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigateHome }) => {
     const img = new Image();
     img.onload = () => setImageLoaded(true);
     img.onerror = () => setImageError(true);
-    img.src = "/Medicion-del-Servicio/images/Coltefinanciera.png";
+    img.src = IMAGES.coltefinanciera;
 
     // Actualizar la hora cada minuto
     const timer = setInterval(() => {
@@ -76,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigateHome }) => {
                 </div>
               ) : (
                 <img
-                  src="/Medicion-del-Servicio/images/Coltefinanciera.png"
+                  src={IMAGES.coltefinanciera}
                   alt="Logo Coltefinanciera"
                   className={`h-8 sm:h-12 w-auto object-contain transition-opacity duration-300 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
