@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { satisfactionDataService } from "../services/dataService";
 import { KPIData } from "../types";
 import {
@@ -256,9 +256,10 @@ const MetricsOverview: React.FC = () => {
 
   // Función para obtener objetivo 2026
   const get2026Target = () => {
-    const currentAverage =
-      prepareMetricsData().reduce((sum, m) => sum + m.consolidado, 0) /
-      prepareMetricsData().length;
+    const metricsData = prepareMetricsData();
+    const currentAverage = metricsData.length > 0
+      ? metricsData.reduce((sum, m) => sum + m.consolidado, 0) / metricsData.length
+      : 0;
     const target = 4.5; // Objetivo aspiracional
     const gap = target - currentAverage;
     const improvementNeeded = ((gap / currentAverage) * 100).toFixed(1);
@@ -333,8 +334,9 @@ const MetricsOverview: React.FC = () => {
     );
   }
 
-  const metricsData = prepareMetricsData();
-  const historicalData = getHistoricalData();
+  // Optimización con useMemo para evitar recálculos innecesarios
+  const metricsData = useMemo(() => prepareMetricsData(), [kpiData]);
+  const historicalData = useMemo(() => getHistoricalData(), [kpiData]);
 
   return (
   <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
