@@ -44,15 +44,18 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigateHome }) => {
 
   const getPageTitle = (page?: string) => {
     const titles: Record<string, string> = {
+      'inicio': 'Inicio',
+      'ficha-tecnica': 'Ficha Técnica',
       'dashboard-general': 'Dashboard General',
+      'metricas-completas': 'Métricas Completas',
       'analisis-geografico': 'Análisis Geográfico',
       'participacion-gerentes': 'Participación Gerentes',
       'analisis-segmento': 'Análisis por Segmentos',
       'analisis-sugerencias': 'Análisis de Sugerencias',
       'explorador-datos': 'Explorador de Datos',
-      'home': 'Inicio'
+      'test': 'Validación Técnica'
     };
-    return titles[page || 'home'] || 'Analytics Platform';
+    return titles[page || 'inicio'] || 'Analytics Platform';
   };
 
   return (

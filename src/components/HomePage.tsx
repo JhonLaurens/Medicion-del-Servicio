@@ -27,12 +27,12 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
   const navigationButtons = [
     {
-      id: "dashboard-general",
+      id: "metricas-completas",
       icon: "📊",
-      title: "Dashboard General",
-      description: "Métricas principales",
+      title: "Métricas Completas",
+      description: "4 métricas principales",
       className: "bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-300 text-center shadow-lg hover:shadow-xl hover:scale-105 group cursor-pointer",
-      ariaLabel: "Ir al Dashboard General con métricas principales"
+      ariaLabel: "Ir a Métricas Completas con las 4 métricas principales"
     },
     {
       id: "analisis-geografico",
@@ -199,11 +199,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             Sistema integral de análisis de satisfacción del cliente
           </p>
           <button
-            onClick={() => handleNavigation("dashboard-general")}
+            onClick={() => handleNavigation("metricas-completas")}
             className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 px-6 sm:px-8 py-3 rounded-full font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer inline-block focus:outline-none focus:ring-4 focus:ring-yellow-300/50"
-            aria-label="Explorar Dashboard General"
+            aria-label="Explorar Métricas Completas"
           >
-            Explorar Dashboard
+            Explorar Métricas
           </button>
         </section>
       </div>
