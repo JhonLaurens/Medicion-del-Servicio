@@ -30,7 +30,12 @@ export class ExecutiveAnalysisService {
           skipEmptyLines: true,
           transformHeader: (header: string) => {
             // Limpiar y normalizar headers
-            return header.trim();
+            const trimmedHeader = header.trim();
+            // Mapear "TIPO EJECUTIVO" a "TIPO_EJECUTIVO" para consistencia
+            if (trimmedHeader === 'TIPO EJECUTIVO') {
+              return 'TIPO_EJECUTIVO';
+            }
+            return trimmedHeader;
           },
           complete: (results) => {
             console.log('📊 ExecutiveAnalysisService: Parse results:', results);

@@ -1,7 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { SatisfactionDataService } from '../services/dataService';
-import { ExecutiveAnalysisService, ExecutiveToAnalyze } from '../services/executiveAnalysisService';
+import React, { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { SatisfactionDataService } from "../services/dataService";
+import {
+  ExecutiveAnalysisService,
+  ExecutiveToAnalyze,
+} from "../services/executiveAnalysisService";
 
 interface ManagerData {
   name: string;
@@ -37,14 +52,18 @@ interface AgencyInfo {
 }
 
 const ManagerParticipationReport: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedAgency, setSelectedAgency] = useState<string>('all');
-  
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedAgency, setSelectedAgency] = useState<string>("all");
+
   // Nuevos estados para los filtros
-  const [selectedFilterType, setSelectedFilterType] = useState<string>('tipoEjecutivo');
-  const [selectedFilterValue, setSelectedFilterValue] = useState<string>('all');
+  const [selectedFilterType, setSelectedFilterType] =
+    useState<string>("tipoEjecutivo");
+  const [selectedFilterValue, setSelectedFilterValue] = useState<string>("all");
   const [filterStats, setFilterStats] = useState<FilterStats[]>([]);
   
+  // Estado para los managers filtrados en la tabla
+  const [filteredManagers, setFilteredManagers] = useState<ManagerData[]>([]);
+
   const [managerData, setManagerData] = useState<{
     personasManagers: ManagerData[];
     bogotaManagers: ManagerData[];
@@ -54,10 +73,12 @@ const ManagerParticipationReport: React.FC = () => {
     personasManagers: [],
     bogotaManagers: [],
     medellinManagers: [],
-    otherEmpresarialManagers: []
+    otherEmpresarialManagers: [],
   });
   const [agencyData, setAgencyData] = useState<AgencyInfo[]>([]);
-  const [executivesToAnalyze, setExecutivesToAnalyze] = useState<ExecutiveToAnalyze[]>([]);
+  const [executivesToAnalyze, setExecutivesToAnalyze] = useState<
+    ExecutiveToAnalyze[]
+  >([]);
 
   const dataService = new SatisfactionDataService();
   const executiveService = new ExecutiveAnalysisService();
@@ -65,27 +86,36 @@ const ManagerParticipationReport: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('🚀 ManagerParticipationReport: Loading data...');
-        
+        console.log("🚀 ManagerParticipationReport: Loading data...");
+
         // Cargar ambos archivos en paralelo
         await Promise.all([
           dataService.loadData(),
-          executiveService.loadExecutivesToAnalyze()
+          executiveService.loadExecutivesToAnalyze(),
         ]);
-        
-        console.log('✅ ManagerParticipationReport: Both data sources loaded successfully');
-        
+
+        console.log(
+          "✅ ManagerParticipationReport: Both data sources loaded successfully"
+        );
+
         // Obtener la lista de ejecutivos para analizar
         const executives = executiveService.getExecutivesToAnalyze();
         setExecutivesToAnalyze(executives);
-        
-        console.log('📋 Executives to analyze:', executives.length, 'executives');
-        console.log('📋 Sample executives:', executives.slice(0, 3));
-        
+
+        console.log(
+          "📋 Executives to analyze:",
+          executives.length,
+          "executives"
+        );
+        console.log("📋 Sample executives:", executives.slice(0, 3));
+
         // Process manager data with filtered executives
         processManagerData();
       } catch (error) {
-        console.error('❌ ManagerParticipationReport: Error loading data:', error);
+        console.error(
+          "❌ ManagerParticipationReport: Error loading data:",
+          error
+        );
       }
     };
 
@@ -94,223 +124,155 @@ const ManagerParticipationReport: React.FC = () => {
 
   // Monitor state changes
   useEffect(() => {
-    console.log('📊 managerData state changed:', managerData);
-    console.log('📊 Current allManagers length:', [
-      ...managerData.personasManagers,
-      ...managerData.bogotaManagers,
-      ...managerData.medellinManagers,
-      ...managerData.otherEmpresarialManagers,
-    ].length);
+    console.log("📊 managerData state changed:", managerData);
+    console.log(
+      "📊 Current allManagers length:",
+      [
+        ...managerData.personasManagers,
+        ...managerData.bogotaManagers,
+        ...managerData.medellinManagers,
+        ...managerData.otherEmpresarialManagers,
+      ].length
+    );
   }, [managerData]);
 
   useEffect(() => {
-    console.log('👥 executivesToAnalyze state changed:', executivesToAnalyze.length, 'executives');
+    console.log(
+      "👥 executivesToAnalyze state changed:",
+      executivesToAnalyze.length,
+      "executives"
+    );
   }, [executivesToAnalyze]);
 
   // Process data when both services are loaded
   useEffect(() => {
-    console.log('🔄 Checking if data processing should run...');
-    console.log('🔍 dataService.isDataLoaded():', dataService.isDataLoaded());
-    console.log('🔍 executiveService.isDataLoaded():', executiveService.isDataLoaded());
-    
+    console.log("🔄 Checking if data processing should run...");
+    console.log("🔍 dataService.isDataLoaded():", dataService.isDataLoaded());
+    console.log(
+      "🔍 executiveService.isDataLoaded():",
+      executiveService.isDataLoaded()
+    );
+
     if (dataService.isDataLoaded() && executiveService.isDataLoaded()) {
-      console.log('✅ Both services loaded, calling processManagerData...');
+      console.log("✅ Both services loaded, calling processManagerData...");
       processManagerData();
     } else {
-      console.log('⏳ Waiting for data to load...');
+      console.log("⏳ Waiting for data to load...");
     }
   }, [executivesToAnalyze]); // Trigger when executives are loaded
-  
+
+  // ... existing code ...
+
   const processManagerData = () => {
-    console.log('🔄 processManagerData: Starting data processing...');
-    
+    console.log("🔄 processManagerData: Starting data processing...");
+
     const data = dataService.getData();
-    console.log('🔍 DEBUG: Total data records:', data?.length || 0);
-    
+    console.log("🔍 DEBUG: Total data records:", data?.length || 0);
+
     if (!data || data.length === 0) {
-      console.log('❌ ManagerParticipationReport: No data available');
-      console.log('🔍 DEBUG: dataService.isDataLoaded():', dataService.isDataLoaded());
+      console.log("❌ ManagerParticipationReport: No data available");
       return;
     }
 
     if (!executiveService.isDataLoaded()) {
-      console.log('❌ ManagerParticipationReport: Executive analysis data not loaded yet');
-      console.log('🔍 DEBUG: executiveService.isDataLoaded():', executiveService.isDataLoaded());
+      console.log("❌ ManagerParticipationReport: Executive analysis data not loaded yet");
       return;
     }
-    
-    console.log('✅ Both data sources are loaded, proceeding with processing...');
 
-    // Debug: Verificar las columnas disponibles
-    if (data.length > 0) {
-      console.log('🔍 DEBUG: Available columns:', Object.keys(data[0]));
-      console.log('🔍 DEBUG: Sample record:', data[0]);
-    }
+    console.log("✅ Both data sources are loaded, proceeding with processing...");
 
     // Obtener la lista de ejecutivos para analizar
     const executivesToAnalyze = executiveService.getExecutivesToAnalyze();
-    console.log('📋 Executives to analyze:', executivesToAnalyze.map(e => e.EJECUTIVO_FINAL));
-
-    // Debug: Mostrar algunos nombres de ejecutivos de ambos archivos para comparación
-    console.log('🔍 DEBUG: Sample executives from analysis file:', 
-      executivesToAnalyze.slice(0, 5).map(e => `"${e.EJECUTIVO_FINAL}"`));
-    
-    console.log('🔍 DEBUG: Sample executives from data file:', 
-      data.slice(0, 10).map(r => `"${r.EJECUTIVO_FINAL}"`));
-
-    // Análisis de ejecutivos únicos
-    const uniqueExecutivesInData = [...new Set(data.map(r => r.EJECUTIVO_FINAL))];
-    const uniqueExecutivesInAnalysis = [...new Set(executivesToAnalyze.map(e => e.EJECUTIVO_FINAL))];
-    
-    console.log('📊 DEBUG: Unique executives in data file:', uniqueExecutivesInData.length);
-    console.log('📊 DEBUG: Unique executives in analysis file:', uniqueExecutivesInAnalysis.length);
-    
-    // Encontrar ejecutivos que están en data pero no en analysis
-    const executivesNotInAnalysis = uniqueExecutivesInData.filter(dataExec => 
-      !uniqueExecutivesInAnalysis.some(analysisExec => 
-        analysisExec.toLowerCase().trim() === dataExec?.toLowerCase().trim()
-      )
-    );
-    
-    console.log('❌ DEBUG: Executives in data but NOT in analysis file:', executivesNotInAnalysis.length);
-    if (executivesNotInAnalysis.length > 0) {
-      console.log('❌ DEBUG: Sample executives not in analysis:', executivesNotInAnalysis.slice(0, 5));
-    }
+    console.log("📋 Executives to analyze:", executivesToAnalyze.map((e) => e.EJECUTIVO_FINAL));
 
     // Filtrar registros que correspondan a los ejecutivos especificados
-    const filteredRecords = data.filter((record, index) => {
-      // Usar EJECUTIVO_FINAL en lugar de EJECUTIVO para hacer coincidir con el archivo de análisis
+    const filteredRecords = data.filter((record) => {
       const ejecutivoName = record.EJECUTIVO_FINAL;
-      
-      // Verificar si este ejecutivo está en la lista para analizar
-      const shouldInclude = executivesToAnalyze.some(executive => {
+      return executivesToAnalyze.some((executive) => {
         const normalizedExecutiveName = executive.EJECUTIVO_FINAL.toLowerCase().trim();
-        const normalizedRecordName = ejecutivoName?.toLowerCase().trim() || '';
-        const matches = normalizedExecutiveName === normalizedRecordName;
-        
-        // Debug detallado para los primeros registros
-        if (index < 10) {
-          console.log(`🔍 DEBUG Record ${index}: "${normalizedRecordName}" vs "${normalizedExecutiveName}" = ${matches}`);
-        }
-        
-        return matches;
+        const normalizedRecordName = ejecutivoName?.toLowerCase().trim() || "";
+        return normalizedExecutiveName === normalizedRecordName;
       });
-
-      if (shouldInclude) {
-        console.log('✅ Including executive:', ejecutivoName);
-      } else if (index < 10) {
-        console.log('❌ Excluding executive:', ejecutivoName);
-      }
-
-      return shouldInclude;
     });
 
-    console.log('📊 Filtered records for specified executives:', filteredRecords.length);
-    console.log('📊 Sample filtered records:', filteredRecords.slice(0, 3));
+    console.log("📊 Filtered records for specified executives:", filteredRecords.length);
 
-    // Agrupar por EJECUTIVO_FINAL y obtener información adicional del archivo de análisis
-    const managerGroups = filteredRecords.reduce((acc, record) => {
-      const managerName = record.EJECUTIVO_FINAL || "Sin Asignar";
-      const agencia = record.AGENCIA || "MÚLTIPLES";
-      const segmento = record.SEGMENTO || "Sin Segmento";
+    // ELIMINAR DUPLICADOS: Agrupar por EJECUTIVO_FINAL y tomar solo un registro por ejecutivo
+    const uniqueExecutiveRecords = new Map();
+    
+    filteredRecords.forEach((record) => {
+      const ejecutivoName = record.EJECUTIVO_FINAL;
+      if (!uniqueExecutiveRecords.has(ejecutivoName)) {
+        uniqueExecutiveRecords.set(ejecutivoName, []);
+      }
+      uniqueExecutiveRecords.get(ejecutivoName).push(record);
+    });
 
+    console.log("🔍 Unique executives found:", uniqueExecutiveRecords.size);
+
+    // Crear datos de managers sin duplicados
+    const managersArray = Array.from(uniqueExecutiveRecords.entries()).map(([managerName, records]) => {
+      const firstRecord = records[0]; // Usar el primer registro como referencia
+      const totalSurveys = records.length; // Contar todas las encuestas de este ejecutivo
+      
       // Obtener información adicional del archivo de ejecutivos para analizar
-      const executiveInfo = executivesToAnalyze.find(executive => {
+      const executiveInfo = executivesToAnalyze.find((executive) => {
         const normalizedExecutiveName = executive.EJECUTIVO_FINAL.toLowerCase().trim();
         const normalizedRecordName = managerName.toLowerCase().trim();
         return normalizedExecutiveName === normalizedRecordName;
       });
 
-      const key = `${managerName}-${agencia}`;
+      // Normalizar tipo de ejecutivo para consistencia
+      let tipoEjecutivo = executiveInfo?.TIPO_EJECUTIVO || firstRecord["TIPO EJECUTIVO"] || "Sin Tipo";
+      tipoEjecutivo = tipoEjecutivo.toUpperCase(); // Normalizar a mayúsculas
 
-      if (!acc[key]) {
-        acc[key] = {
-          name: managerName,
-          agencia: agencia,
-          segmento: segmento,
-          surveys: 0,
-          records: [],
-          executiveInfo: executiveInfo,
-          // Usar información del archivo de análisis si está disponible
-          ciudad: executiveInfo?.CIUDAD || "Sin Ciudad",
-          tipoEjecutivo: executiveInfo?.TIPO_EJECUTIVO || "Sin Tipo"
-        };
+      const agencia = executiveInfo?.AGENCIA || firstRecord.AGENCIA || "Sin Agencia";
+      const segmento = executiveInfo?.SEGMENTO || firstRecord.SEGMENTO || "Sin Segmento";
+      const ciudad = executiveInfo?.CIUDAD || firstRecord.CIUDAD || "Sin Ciudad";
+
+      // Determinar categoría
+      let category = "general";
+      if (segmento.toLowerCase().includes("personas")) {
+        category = "personas";
+      } else if (segmento.toLowerCase().includes("empresarial")) {
+        if (ciudad.toLowerCase().includes("bogotá") || ciudad.toLowerCase().includes("bogota")) {
+          category = "empresarial-bogota";
+        } else if (ciudad.toLowerCase().includes("medellín") || ciudad.toLowerCase().includes("medellin")) {
+          category = "empresarial-medellin";
+        } else {
+          category = "empresarial-other";
+        }
       }
 
-      acc[key].surveys++;
-      acc[key].records.push(record);
-
-      return acc;
-    }, {} as Record<string, any>);
-
-    // Convertir a array y calcular estadísticas
-    const managersArray = Object.values(managerGroups).map((group: any) => {
-      const totalSurveys = group.surveys;
       const totalRecords = filteredRecords.length;
       const percentage = totalRecords > 0 ? (totalSurveys / totalRecords) * 100 : 0;
 
-      // Determinar categoría basada en la información del archivo de análisis
-      let category = "general";
-      const executiveInfo = group.executiveInfo;
-      
-      if (executiveInfo) {
-        const segmento = executiveInfo.SEGMENTO?.toLowerCase() || '';
-        const ciudad = executiveInfo.CIUDAD?.toLowerCase() || '';
-        
-        if (segmento.includes("personas")) {
-          category = "personas";
-        } else if (segmento.includes("empresarial")) {
-          if (ciudad.includes("bogotá") || ciudad.includes("bogota")) {
-            category = "empresarial-bogota";
-          } else if (ciudad.includes("medellín") || ciudad.includes("medellin")) {
-            category = "empresarial-medellin";
-          } else {
-            category = "empresarial-other";
-          }
-        }
-      } else {
-        // Fallback a la lógica anterior si no hay información del archivo de análisis
-        if (group.segmento.toLowerCase().includes("personas")) {
-          category = "personas";
-        } else if (group.segmento.toLowerCase().includes("empresarial")) {
-          if (group.agencia.toLowerCase().includes("bogotá")) {
-            category = "empresarial-bogota";
-          } else if (
-            group.agencia.toLowerCase().includes("medellín") ||
-            group.agencia.toLowerCase().includes("medellin")
-          ) {
-            category = "empresarial-medellin";
-          } else {
-            category = "empresarial-other";
-          }
-        }
-      }
-
       return {
-        name: group.name,
+        name: managerName,
         surveys: totalSurveys,
         percentage: parseFloat(percentage.toFixed(2)),
         coverageRate: 0,
         totalUniverse: totalSurveys,
         category: category,
-        agencia: group.agencia,
-        segmento: group.segmento,
-        ciudad: group.ciudad,
-        tipoEjecutivo: group.tipoEjecutivo,
-        executiveInfo: group.executiveInfo
+        agencia: agencia,
+        segmento: segmento,
+        ciudad: ciudad,
+        tipoEjecutivo: tipoEjecutivo,
+        executiveInfo: executiveInfo,
       } as ManagerData;
     });
 
-    // Separar por categorías
-    const personasManagers = managersArray.filter(m => m.category === "personas");
-    const bogotaManagers = managersArray.filter(m => m.category === "empresarial-bogota");
-    const medellinManagers = managersArray.filter(m => m.category === "empresarial-medellin");
-    const otherEmpresarialManagers = managersArray.filter(m => m.category === "empresarial-other");
+    console.log("📊 Processed managers (without duplicates):", managersArray.length);
 
-    // Crear información de agencias basada en los ejecutivos filtrados
+    // Separar por categorías
+    const personasManagers = managersArray.filter((m) => m.category === "personas");
+    const bogotaManagers = managersArray.filter((m) => m.category === "empresarial-bogota");
+    const medellinManagers = managersArray.filter((m) => m.category === "empresarial-medellin");
+    const otherEmpresarialManagers = managersArray.filter((m) => m.category === "empresarial-other");
+
+    // Crear información de agencias
     const agencyGroups = managersArray.reduce((acc, manager) => {
       const agencyName = manager.agencia || "Sin Agencia";
-
       if (!acc[agencyName]) {
         acc[agencyName] = {
           name: agencyName,
@@ -321,13 +283,11 @@ const ManagerParticipationReport: React.FC = () => {
           segment: manager.segmento || "Sin Definir",
         };
       }
-
       acc[agencyName].totalSurveys += manager.surveys;
       acc[agencyName].totalManagers++;
       if (manager.surveys > 0) {
         acc[agencyName].activeManagers++;
       }
-
       return acc;
     }, {} as Record<string, AgencyInfo>);
 
@@ -342,135 +302,151 @@ const ManagerParticipationReport: React.FC = () => {
 
     setAgencyData(agencies);
 
-    console.log("📊 ManagerParticipationReport: Processed filtered data:", {
-      totalFilteredRecords: filteredRecords.length,
-      totalExecutivesToAnalyze: executivesToAnalyze.length,
+    console.log("📊 ManagerParticipationReport: Processed data (duplicates removed):", {
+      totalUniqueExecutives: managersArray.length,
       personas: personasManagers.length,
       bogota: bogotaManagers.length,
       medellin: medellinManagers.length,
       other: otherEmpresarialManagers.length,
       agencies: agencies.length,
-      allManagersLength: managersArray.length,
-      sampleManagers: managersArray.slice(0, 3),
     });
-    
-    console.log("✅ ManagerParticipationReport: State has been updated!");
-    console.log("🔍 DEBUG: Setting managerData with:", {
-      personasManagers: personasManagers.length,
-      bogotaManagers: bogotaManagers.length,
-      medellinManagers: medellinManagers.length,
-      otherEmpresarialManagers: otherEmpresarialManagers.length,
-    });
-    
-    // Calcular estadísticas por filtros
-    calculateFilterStats(filteredRecords);
+
+    // Calcular estadísticas por filtros usando TODOS los datos del CSV
+    const allData = dataService.getData();
+    if (allData && allData.length > 0) {
+      calculateFilterStats(allData);
+    }
   };
 
-  // Nueva función para calcular estadísticas por filtros
+  // Función mejorada para calcular estadísticas por filtros
   const calculateFilterStats = (data: any[]) => {
-    const filterTypes = ['tipoEjecutivo', 'segmento', 'ciudad', 'agencia'];
-    
-    filterTypes.forEach(filterType => {
-      const stats: FilterStats[] = [];
-      
-      // Obtener valores únicos para el tipo de filtro
-      const uniqueValues = [...new Set(data.map(record => {
-        switch(filterType) {
-          case 'tipoEjecutivo':
-            return record['TIPO EJECUTIVO'] || 'Sin Tipo';
-          case 'segmento':
-            return record.SEGMENTO || 'Sin Segmento';
-          case 'ciudad':
-            return record.CIUDAD || 'Sin Ciudad';
-          case 'agencia':
-            return record.AGENCIA || 'Sin Agencia';
+    console.log("🔍 calculateFilterStats: Starting calculation with", data.length, "records");
+
+    if (!data || data.length === 0) {
+      console.log("❌ calculateFilterStats: No data available");
+      setFilterStats([]);
+      return;
+    }
+
+    const stats: FilterStats[] = [];
+
+    // Obtener valores únicos para el tipo de filtro seleccionado
+    const uniqueValues = [...new Set(
+      data.map((record) => {
+        let value;
+        switch (selectedFilterType) {
+          case "tipoEjecutivo":
+            value = record["TIPO EJECUTIVO"] || "Sin Tipo";
+            // Normalizar a mayúsculas para consistencia
+            return value.toUpperCase();
+          case "segmento":
+            return record.SEGMENTO || "Sin Segmento";
+          case "ciudad":
+            return record.CIUDAD || "Sin Ciudad";
+          case "agencia":
+            return record.AGENCIA || "Sin Agencia";
           default:
-            return 'Sin Definir';
+            return "Sin Clasificar";
         }
-      }))];
+      }).filter(Boolean)
+    )];
 
-      uniqueValues.forEach(value => {
-        const filteredData = data.filter(record => {
-          const recordValue = (() => {
-            switch(filterType) {
-              case 'tipoEjecutivo':
-                return record['TIPO EJECUTIVO'] || 'Sin Tipo';
-              case 'segmento':
-                return record.SEGMENTO || 'Sin Segmento';
-              case 'ciudad':
-                return record.CIUDAD || 'Sin Ciudad';
-              case 'agencia':
-                return record.AGENCIA || 'Sin Agencia';
-              default:
-                return 'Sin Definir';
-            }
-          })();
-          return recordValue === value;
-        });
+    console.log("🔍 calculateFilterStats: Unique values for", selectedFilterType, ":", uniqueValues);
 
-        if (filteredData.length > 0) {
-          // Calcular promedios de las métricas
-          const claridadValues = filteredData
-            .map(r => parseFloat(r['En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?']))
-            .filter(v => !isNaN(v));
-          
-          const recomendacionValues = filteredData
-            .map(r => parseFloat(r['¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?']))
-            .filter(v => !isNaN(v));
-          
-          const satisfaccionValues = filteredData
-            .map(r => parseFloat(r['En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?']))
-            .filter(v => !isNaN(v));
-          
-          const lealtadValues = filteredData
-            .map(r => parseFloat(r['Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?']))
-            .filter(v => !isNaN(v));
-
-          const claridadPromedio = claridadValues.length > 0 ? 
-            claridadValues.reduce((a, b) => a + b, 0) / claridadValues.length : 0;
-          
-          const recomendacionPromedio = recomendacionValues.length > 0 ? 
-            recomendacionValues.reduce((a, b) => a + b, 0) / recomendacionValues.length : 0;
-          
-          const satisfaccionPromedio = satisfaccionValues.length > 0 ? 
-            satisfaccionValues.reduce((a, b) => a + b, 0) / satisfaccionValues.length : 0;
-          
-          const lealtadPromedio = lealtadValues.length > 0 ? 
-            lealtadValues.reduce((a, b) => a + b, 0) / lealtadValues.length : 0;
-
-          // Promedio general de todas las métricas
-          const allValues = [...claridadValues, ...recomendacionValues, ...satisfaccionValues, ...lealtadValues];
-          const averageRating = allValues.length > 0 ? 
-            allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
-
-          stats.push({
-            filterValue: value,
-            totalSurveys: filteredData.length,
-            averageRating: parseFloat(averageRating.toFixed(2)),
-            claridadPromedio: parseFloat(claridadPromedio.toFixed(2)),
-            recomendacionPromedio: parseFloat(recomendacionPromedio.toFixed(2)),
-            satisfaccionPromedio: parseFloat(satisfaccionPromedio.toFixed(2)),
-            lealtadPromedio: parseFloat(lealtadPromedio.toFixed(2))
-          });
+    uniqueValues.forEach((value) => {
+      // Filtrar datos para este valor específico
+      const filteredData = data.filter((record) => {
+        switch (selectedFilterType) {
+          case "tipoEjecutivo":
+            const tipoValue = (record["TIPO EJECUTIVO"] || "Sin Tipo").toUpperCase();
+            return tipoValue === value;
+          case "segmento":
+            return (record.SEGMENTO || "Sin Segmento") === value;
+          case "ciudad":
+            return (record.CIUDAD || "Sin Ciudad") === value;
+          case "agencia":
+            return (record.AGENCIA || "Sin Agencia") === value;
+          default:
+            return false;
         }
       });
 
-      // Guardar las estadísticas para el tipo de filtro actual
-      if (filterType === selectedFilterType) {
-        setFilterStats(stats.sort((a, b) => b.totalSurveys - a.totalSurveys));
+      if (filteredData.length > 0) {
+        // Usar los nombres exactos de las columnas del CSV
+        const claridadCol = "En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?";
+        const recomendacionCol = "¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?";
+        const satisfaccionCol = "En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?";
+        const lealtadCol = "Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?";
+
+        // Calcular promedios de las métricas
+        const claridadValues = filteredData.map((r) => parseFloat(r[claridadCol])).filter((v) => !isNaN(v) && v > 0);
+        const recomendacionValues = filteredData.map((r) => parseFloat(r[recomendacionCol])).filter((v) => !isNaN(v) && v > 0);
+        const satisfaccionValues = filteredData.map((r) => parseFloat(r[satisfaccionCol])).filter((v) => !isNaN(v) && v > 0);
+        const lealtadValues = filteredData.map((r) => parseFloat(r[lealtadCol])).filter((v) => !isNaN(v) && v > 0);
+
+        const claridadPromedio = claridadValues.length > 0 ? claridadValues.reduce((a, b) => a + b, 0) / claridadValues.length : 0;
+        const recomendacionPromedio = recomendacionValues.length > 0 ? recomendacionValues.reduce((a, b) => a + b, 0) / recomendacionValues.length : 0;
+        const satisfaccionPromedio = satisfaccionValues.length > 0 ? satisfaccionValues.reduce((a, b) => a + b, 0) / satisfaccionValues.length : 0;
+        const lealtadPromedio = lealtadValues.length > 0 ? lealtadValues.reduce((a, b) => a + b, 0) / lealtadValues.length : 0;
+
+        // Promedio general de todas las métricas válidas
+        const allValues = [...claridadValues, ...recomendacionValues, ...satisfaccionValues, ...lealtadValues];
+        const averageRating = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
+
+        stats.push({
+          filterValue: value,
+          totalSurveys: filteredData.length,
+          averageRating: parseFloat(averageRating.toFixed(2)),
+          claridadPromedio: parseFloat(claridadPromedio.toFixed(2)),
+          recomendacionPromedio: parseFloat(recomendacionPromedio.toFixed(2)),
+          satisfaccionPromedio: parseFloat(satisfaccionPromedio.toFixed(2)),
+          lealtadPromedio: parseFloat(lealtadPromedio.toFixed(2)),
+        });
       }
     });
+
+    // Ordenar por número de encuestas descendente
+    const sortedStats = stats.sort((a, b) => b.totalSurveys - a.totalSurveys);
+    console.log("✅ calculateFilterStats: Final calculated stats:", sortedStats);
+    setFilterStats(sortedStats);
   };
 
-  // Efecto para recalcular estadísticas cuando cambia el tipo de filtro
-  useEffect(() => {
-    if (dataService.isDataLoaded()) {
-      const data = dataService.getData();
-      if (data && data.length > 0) {
-        calculateFilterStats(data);
-      }
+  // Función para aplicar filtros a la tabla de participación
+  const applyFiltersToTable = () => {
+    const allManagers = [
+      ...managerData.personasManagers,
+      ...managerData.bogotaManagers,
+      ...managerData.medellinManagers,
+      ...managerData.otherEmpresarialManagers,
+    ];
+
+    if (selectedFilterValue === "all") {
+      setFilteredManagers(allManagers);
+      return;
     }
-  }, [selectedFilterType]);
+
+    const filtered = allManagers.filter((manager) => {
+      switch (selectedFilterType) {
+        case "tipoEjecutivo":
+          return manager.tipoEjecutivo?.toUpperCase() === selectedFilterValue.toUpperCase();
+        case "segmento":
+          return manager.segmento === selectedFilterValue;
+        case "ciudad":
+          return manager.ciudad === selectedFilterValue;
+        case "agencia":
+          return manager.agencia === selectedFilterValue;
+        default:
+          return true;
+      }
+    });
+
+    setFilteredManagers(filtered);
+  };
+
+  // Efecto para aplicar filtros cuando cambian los valores
+  useEffect(() => {
+    applyFiltersToTable();
+  }, [selectedFilterType, selectedFilterValue, managerData]);
 
   // Use real data from CSV processing
   const {
@@ -479,7 +455,9 @@ const ManagerParticipationReport: React.FC = () => {
     medellinManagers,
     otherEmpresarialManagers,
   } = managerData;
-  const allManagers = [
+  
+  // Usar managers filtrados si hay filtros aplicados, sino usar todos
+  const allManagers = filteredManagers.length > 0 ? filteredManagers : [
     ...personasManagers,
     ...bogotaManagers,
     ...medellinManagers,
@@ -507,9 +485,7 @@ const ManagerParticipationReport: React.FC = () => {
     0
   );
   const totalManagers = allManagers.length;
-  const activeManagers = allManagers.filter(
-    (manager) => manager.surveys > 0
-  ).length;
+  const activeManagers = allManagers.filter((m) => m.surveys > 0).length;
 
   // Top 10 gerentes por número de encuestas (con datos reales)
   const topManagers = allManagers
@@ -575,13 +551,13 @@ const ManagerParticipationReport: React.FC = () => {
   ];
 
   // Debug logging before render
-  console.log('🎨 RENDER DEBUG:', {
-    'managerData state': managerData,
-    'allManagers length': allManagers.length,
-    'allManagers sample': allManagers.slice(0, 2),
-    'totalSurveys': totalSurveys,
-    'totalManagers': totalManagers,
-    'activeManagers': activeManagers
+  console.log("🎨 RENDER DEBUG:", {
+    "managerData state": managerData,
+    "allManagers length": allManagers.length,
+    "allManagers sample": allManagers.slice(0, 2),
+    totalSurveys: totalSurveys,
+    totalManagers: totalManagers,
+    activeManagers: activeManagers,
   });
 
   return (
@@ -593,11 +569,12 @@ const ManagerParticipationReport: React.FC = () => {
         </h1>
         <p className="text-gray-600 text-lg leading-relaxed">
           Este reporte presenta un análisis detallado de la participación de los
-          ejecutivos especificados en el archivo "ejecutivos para analizar.csv" 
-          en las encuestas de satisfacción al cliente. Los datos incluyen el número 
-          de encuestas realizadas, porcentaje de participación y tasas de cobertura 
-          por cada ejecutivo, organizados por TIPO_EJECUTIVO, SEGMENTO, CIUDAD y AGENCIA.
-          Solo se incluyen los ejecutivos que están listados en el archivo de análisis.
+          ejecutivos especificados en el archivo "ejecutivos para analizar.csv"
+          en las encuestas de satisfacción al cliente. Los datos incluyen el
+          número de encuestas realizadas, porcentaje de participación y tasas de
+          cobertura por cada ejecutivo, organizados por TIPO_EJECUTIVO,
+          SEGMENTO, CIUDAD y AGENCIA. Solo se incluyen los ejecutivos que están
+          listados en el archivo de análisis.
           <br />
           <br />
           <strong>Total de encuestas analizadas:</strong> {totalSurveys} |{" "}
@@ -622,7 +599,7 @@ const ManagerParticipationReport: React.FC = () => {
             <div className="text-3xl font-bold text-green-600">
               {totalManagers}
             </div>
-            <div className="text-sm text-gray-600">Ejecutivos Monitoreados</div>
+            <div className="text-sm text-gray-600">Ejecutivos Analizados</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-orange-600">
@@ -632,7 +609,9 @@ const ManagerParticipationReport: React.FC = () => {
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-purple-600">
-              {activeManagers > 0 ? Math.round(totalSurveys / activeManagers) : 0}
+              {activeManagers > 0
+                ? Math.round(totalSurveys / activeManagers)
+                : 0}
             </div>
             <div className="text-sm text-gray-600">Promedio por Activo</div>
           </div>
@@ -644,13 +623,14 @@ const ManagerParticipationReport: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
           🔍 Análisis por Filtros
         </h2>
-        
+
         {/* Selector de tipo de filtro */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Seleccionar tipo de análisis:
           </label>
           <select
+            aria-label="Seleccionar tipo de filtro"
             value={selectedFilterType}
             onChange={(e) => setSelectedFilterType(e.target.value)}
             className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -662,23 +642,39 @@ const ManagerParticipationReport: React.FC = () => {
           </select>
         </div>
 
+        {/* Debug log para verificar filterStats antes del renderizado */}
+        {console.log("🎨 RENDER: filterStats state:", {
+          length: filterStats.length,
+          selectedFilterType: selectedFilterType,
+          data: filterStats.slice(0, 2)
+        })}
+
         {/* Estadísticas por filtro */}
-        {filterStats.length > 0 && (
+        {filterStats.length > 0 ? (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              📊 Estadísticas por {selectedFilterType === 'tipoEjecutivo' ? 'Tipo Ejecutivo' : 
-                                   selectedFilterType === 'segmento' ? 'Segmento' :
-                                   selectedFilterType === 'ciudad' ? 'Ciudad' : 'Agencia'}
+              📊 Estadísticas por{" "}
+              {selectedFilterType === "tipoEjecutivo"
+                ? "Tipo Ejecutivo"
+                : selectedFilterType === "segmento"
+                ? "Segmento"
+                : selectedFilterType === "ciudad"
+                ? "Ciudad"
+                : "Agencia"}
             </h3>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full table-auto border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-r from-green-600 to-green-700 text-white">
                     <th className="px-4 py-3 text-left font-semibold border-r border-green-500">
-                      {selectedFilterType === 'tipoEjecutivo' ? 'Tipo Ejecutivo' : 
-                       selectedFilterType === 'segmento' ? 'Segmento' :
-                       selectedFilterType === 'ciudad' ? 'Ciudad' : 'Agencia'}
+                      {selectedFilterType === "tipoEjecutivo"
+                        ? "Tipo Ejecutivo"
+                        : selectedFilterType === "segmento"
+                        ? "Segmento"
+                        : selectedFilterType === "ciudad"
+                        ? "Ciudad"
+                        : "Agencia"}
                     </th>
                     <th className="px-4 py-3 text-center font-semibold border-r border-green-500">
                       Encuestas
@@ -719,7 +715,10 @@ const ManagerParticipationReport: React.FC = () => {
                                 : "bg-red-500"
                             }`}
                           ></div>
-                          <span className="truncate max-w-xs" title={stat.filterValue}>
+                          <span
+                            className="truncate max-w-xs"
+                            title={stat.filterValue}
+                          >
                             {stat.filterValue}
                           </span>
                         </div>
@@ -771,41 +770,87 @@ const ManagerParticipationReport: React.FC = () => {
             {/* Gráfico de barras para visualizar las métricas */}
             <div className="mt-6">
               <h4 className="text-md font-semibold text-gray-800 mb-4">
-                📈 Visualización de Métricas por {selectedFilterType === 'tipoEjecutivo' ? 'Tipo Ejecutivo' : 
-                                                   selectedFilterType === 'segmento' ? 'Segmento' :
-                                                   selectedFilterType === 'ciudad' ? 'Ciudad' : 'Agencia'}
+                📈 Visualización de Métricas por{" "}
+                {selectedFilterType === "tipoEjecutivo"
+                  ? "Tipo Ejecutivo"
+                  : selectedFilterType === "segmento"
+                  ? "Segmento"
+                  : selectedFilterType === "ciudad"
+                  ? "Ciudad"
+                  : "Agencia"}
               </h4>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={filterStats.slice(0, 10)} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <BarChart
+                    data={filterStats.slice(0, 10)}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="filterValue" 
+                    <XAxis
+                      dataKey="filterValue"
                       angle={-45}
                       textAnchor="end"
                       height={80}
                       interval={0}
                     />
                     <YAxis domain={[0, 5]} />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value, name) => [
-                        typeof value === 'number' ? value.toFixed(2) : value,
-                        name === 'averageRating' ? 'Promedio General' :
-                        name === 'claridadPromedio' ? 'Claridad' :
-                        name === 'recomendacionPromedio' ? 'Recomendación' :
-                        name === 'satisfaccionPromedio' ? 'Satisfacción' :
-                        name === 'lealtadPromedio' ? 'Lealtad' : name
+                        typeof value === "number" ? value.toFixed(2) : value,
+                        name === "averageRating"
+                          ? "Promedio General"
+                          : name === "claridadPromedio"
+                          ? "Claridad"
+                          : name === "recomendacionPromedio"
+                          ? "Recomendación"
+                          : name === "satisfaccionPromedio"
+                          ? "Satisfacción"
+                          : name === "lealtadPromedio"
+                          ? "Lealtad"
+                          : name,
                       ]}
                     />
                     <Legend />
-                    <Bar dataKey="averageRating" fill="#3B82F6" name="Promedio General" />
-                    <Bar dataKey="claridadPromedio" fill="#10B981" name="Claridad" />
-                    <Bar dataKey="recomendacionPromedio" fill="#F59E0B" name="Recomendación" />
-                    <Bar dataKey="satisfaccionPromedio" fill="#EF4444" name="Satisfacción" />
-                    <Bar dataKey="lealtadPromedio" fill="#8B5CF6" name="Lealtad" />
+                    <Bar
+                      dataKey="averageRating"
+                      fill="#3B82F6"
+                      name="Promedio General"
+                    />
+                    <Bar
+                      dataKey="claridadPromedio"
+                      fill="#10B981"
+                      name="Claridad"
+                    />
+                    <Bar
+                      dataKey="recomendacionPromedio"
+                      fill="#F59E0B"
+                      name="Recomendación"
+                    />
+                    <Bar
+                      dataKey="satisfaccionPromedio"
+                      fill="#EF4444"
+                      name="Satisfacción"
+                    />
+                    <Bar
+                      dataKey="lealtadPromedio"
+                      fill="#8B5CF6"
+                      name="Lealtad"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+              🔍 Depuración: No hay estadísticas disponibles
+            </h3>
+            <div className="text-sm text-yellow-700 space-y-2">
+              <p><strong>Tipo de filtro seleccionado:</strong> {selectedFilterType}</p>
+              <p><strong>Datos cargados:</strong> {dataService.isDataLoaded() ? 'Sí' : 'No'}</p>
+              <p><strong>Longitud de filterStats:</strong> {filterStats.length}</p>
+              <p><strong>Estado de carga:</strong> {dataService.isDataLoaded() && executiveService.isDataLoaded() ? 'Ambos servicios cargados' : 'Esperando carga de datos'}</p>
             </div>
           </div>
         )}
@@ -816,10 +861,60 @@ const ManagerParticipationReport: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
           📋 Detalle de Participación
         </h2>
-        
+
+        {/* Filtros para la tabla */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-2">
+              Filtrar por:
+            </label>
+            <select
+              value={selectedFilterType}
+              onChange={(e) => setSelectedFilterType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="tipoEjecutivo">Tipo Ejecutivo</option>
+              <option value="segmento">Segmento</option>
+              <option value="ciudad">Ciudad</option>
+              <option value="agencia">Agencia</option>
+            </select>
+          </div>
+          
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-2">
+              Valor:
+            </label>
+            <select
+              value={selectedFilterValue}
+              onChange={(e) => setSelectedFilterValue(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Todos</option>
+              {filterStats.map((stat) => (
+                <option key={stat.filterValue} value={stat.filterValue}>
+                  {stat.filterValue} ({stat.totalSurveys} encuestas)
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {selectedFilterValue !== "all" && (
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                Resultados:
+              </label>
+              <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                {allManagers.length} ejecutivos encontrados
+              </div>
+            </div>
+          )}
+        </div>
+
         {allManagers.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500 text-lg">No se encontraron datos de ejecutivos</p>
+            <p className="text-gray-500 text-lg">
+              No se encontraron datos de ejecutivos
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -868,7 +963,10 @@ const ManagerParticipationReport: React.FC = () => {
                               : "bg-red-500"
                           }`}
                         ></div>
-                        <span className="truncate max-w-xs" title={manager.name}>
+                        <span
+                          className="truncate max-w-xs"
+                          title={manager.name}
+                        >
                           {manager.name}
                         </span>
                       </div>
@@ -891,17 +989,17 @@ const ManagerParticipationReport: React.FC = () => {
                     </td>
                     <td className="px-4 py-4 text-center border-r border-gray-200">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {manager.tipoEjecutivo || 'N/A'}
+                        {manager.tipoEjecutivo || "N/A"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center border-r border-gray-200">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {manager.segmento || 'N/A'}
+                        {manager.segmento || "N/A"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center border-r border-gray-200">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        {manager.ciudad || 'N/A'}
+                        {manager.ciudad || "N/A"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
