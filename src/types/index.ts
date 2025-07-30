@@ -15,6 +15,7 @@ export interface SatisfactionRecord {
   recomendacion: number; // "¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas, familiares o amigos?"
   satisfaccion_general: number; // "En general, ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?"
   lealtad: number; // "Asumiendo que otra entidad financiera le ofreciera al mismo precio..."
+  sugerencias: string; // "¿Tiene alguna recomendación o sugerencia acerca del servicio que le ofrecemos en Coltefinanciera?"
 }
 
 export interface KPIData {
@@ -66,6 +67,52 @@ export interface SuggestionData {
     sugerencia: string;
     porcentaje: number;
   }>;
+}
+
+// Nuevos tipos para análisis de IA
+export interface AICategory {
+  id: string;
+  name: string;
+  description: string;
+  keywords: string[];
+  sentiment: 'positive' | 'negative' | 'neutral';
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface AnalyzedSuggestion {
+  originalText: string;
+  cleanedText: string;
+  category: string;
+  subcategory?: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  priority: 'high' | 'medium' | 'low';
+  keywords: string[];
+  confidence: number;
+  themes: string[];
+}
+
+export interface CategoryInsight {
+  category: string;
+  count: number;
+  percentage: number;
+  sentiment: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
+  priority: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  topKeywords: Array<{ keyword: string; frequency: number }>;
+  topThemes: Array<{ theme: string; count: number }>;
+  examples: string[];
+}
+
+export interface EnhancedSuggestionData extends SuggestionData {
+  aiInsights?: CategoryInsight;
+  analyzedSuggestions?: AnalyzedSuggestion[];
 }
 
 export interface NavItem {

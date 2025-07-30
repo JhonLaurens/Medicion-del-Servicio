@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CSV Access</title>
+</head>
+<body>
+    <h1>Test de Acceso a Archivos CSV</h1>
+    <div id="results"></div>
+
+    <script>
+        async function testCSVAccess() {
+            const results = document.getElementById('results');
+            
+            // Test datos.csv
+            try {
+                console.log('Testing datos.csv...');
+                const response1 = await fetch('/Medicion-del-Servicio/datos.csv');
+                console.log('datos.csv response:', response1.status, response1.statusText);
+                if (response1.ok) {
+                    const text1 = await response1.text();
+                    console.log('datos.csv length:', text1.length);
+                    results.innerHTML += `<p>✅ datos.csv: OK (${text1.length} characters)</p>`;
+                } else {
+                    results.innerHTML += `<p>❌ datos.csv: Error ${response1.status}</p>`;
+                }
+            } catch (error) {
+                console.error('Error loading datos.csv:', error);
+                results.innerHTML += `<p>❌ datos.csv: ${error.message}</p>`;
+            }
+
+            // Test ejecutivos para analizar.csv
+            try {
+                console.log('Testing ejecutivos para analizar.csv...');
+                const response2 = await fetch('/Medicion-del-Servicio/ejecutivos para analizar.csv');
+                console.log('ejecutivos para analizar.csv response:', response2.status, response2.statusText);
+                if (response2.ok) {
+                    const text2 = await response2.text();
+                    console.log('ejecutivos para analizar.csv length:', text2.length);
+                    results.innerHTML += `<p>✅ ejecutivos para analizar.csv: OK (${text2.length} characters)</p>`;
+                } else {
+                    results.innerHTML += `<p>❌ ejecutivos para analizar.csv: Error ${response2.status}</p>`;
+                }
+            } catch (error) {
+                console.error('Error loading ejecutivos para analizar.csv:', error);
+                results.innerHTML += `<p>❌ ejecutivos para analizar.csv: ${error.message}</p>`;
+            }
+        }
+
+        // Run test when page loads
+        window.addEventListener('load', testCSVAccess);
+    </script>
+</body>
+</html>

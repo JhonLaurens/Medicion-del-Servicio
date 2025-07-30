@@ -1,9 +1,10 @@
 import Papa from 'papaparse';
-import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData } from '../types';
+import { SatisfactionRecord, KPIData, GeographicData, SuggestionData, EnhancedSuggestionData, TechnicalInfo, NPSData, ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData } from '../types';
+import { aiAnalysisService } from './aiAnalysisService';
 
 export class SatisfactionDataService {
   private data: SatisfactionRecord[] = [];
-  private isDataLoaded = false;
+  private isLoaded = false;
 
   // Configuración de logging basada en el entorno
   private isDev = typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.MODE === 'development';
@@ -19,7 +20,7 @@ export class SatisfactionDataService {
   }
 
   async loadData(): Promise<void> {
-    if (this.isDataLoaded && this.data.length > 0) {
+    if (this.isLoaded && this.data.length > 0) {
       this.log('📊 DataService: Data already loaded,', this.data.length, 'records');
       return;
     }
@@ -40,6 +41,8 @@ export class SatisfactionDataService {
         '¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?': 'recomendacion',
         'En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?': 'satisfaccion_general',
         'Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?': 'lealtad',
+        '¿Tiene alguna recomendación o sugerencia acerca del servicio que le ofrecemos en Coltefinanciera?': 'sugerencias',
+        'TIPO EJECUTIVO': 'TIPO_EJECUTIVO',
       };
 
       const parsed = Papa.parse(csvText, {
@@ -81,14 +84,14 @@ export class SatisfactionDataService {
         this.log('✅ DataService: Loaded', this.data.length, 'valid records from', parsed.data.length, 'total rows');
         this.log('📄 DataService: First record example:', this.data[0]);
         this.log('📊 DataService: Available fields:', Object.keys(this.data[0]));
-        this.isDataLoaded = true;
+        this.isLoaded = true;
       } else {
         this.logError('⚠️ DataService: No valid records found. Sample row:', parsed.data[0]);
         throw new Error('No valid data records found in CSV file');
       }
 
     } catch (error) {
-      this.isDataLoaded = false;
+      this.isLoaded = false;
       this.logError('❌ DataService: Error loading CSV data:', error);
       throw error;
     }
@@ -131,6 +134,7 @@ export class SatisfactionDataService {
       recomendacion: this.sanitizeNumericValue(row.recomendacion),
       satisfaccion_general: this.sanitizeNumericValue(row.satisfaccion_general),
       lealtad: this.sanitizeNumericValue(row.lealtad),
+      sugerencias: String(row.sugerencias || '').trim(),
     };
   }
 
@@ -165,7 +169,7 @@ export class SatisfactionDataService {
   getKPIData(): KPIData[] {
     console.log('🚀 getKPIData: MÉTODO INICIADO');
     
-    if (!this.isDataLoaded || this.data.length === 0) {
+    if (!this.isLoaded || this.data.length === 0) {
       console.error('⚠️ DataService: No data loaded for KPI calculation');
       this.logError('⚠️ DataService: No data loaded for KPI calculation', new Error('No data available'));
       return [];
@@ -335,8 +339,116 @@ export class SatisfactionDataService {
   }
 
   getSuggestionData(): SuggestionData[] {
-    // Data de ejemplo basada en el PDF
-    return [
+    if (this.data.length === 0) return [];
+
+    // Extraer todas las sugerencias no vacías
+    const suggestions = this.data
+      .map(record => record.sugerencias)
+      .filter(suggestion => suggestion && suggestion.trim() !== '' && suggestion.trim() !== '""""""' && suggestion.trim() !== 'No' && suggestion.trim() !== 'Ninguna')
+      .map(suggestion => suggestion.replace(/^"|"$/g, '').trim()) // Limpiar comillas
+      .filter(suggestion => suggestion.length > 0);
+
+    if (suggestions.length === 0) {
+      // Si no hay sugerencias, devolver datos de ejemplo
+      return [
+        {
+          categoria: "Mejoras en Atención y Servicios",
+          porcentaje: 53,
+          detalles: [
+            { sugerencia: "Buenas atención y amabilidad", porcentaje: 11 },
+            { sugerencia: "Mala atención por audiorespuesta/contact center", porcentaje: 8 },
+            { sugerencia: "Disminuir tiempo de respuesta (PQR y Correos)", porcentaje: 7 }
+          ]
+        },
+        {
+          categoria: "Mejoras en Productos",
+          porcentaje: 32,
+          detalles: [
+            { sugerencia: "Bajas tasas de interés / Mejorar las tasas", porcentaje: 17 },
+            { sugerencia: "Alto costo en las tarifas", porcentaje: 9 }
+          ]
+        },
+        {
+          categoria: "Mejoras Tecnológicas",
+          porcentaje: 15
+        }
+      ];
+    }
+
+    // Categorizar sugerencias usando palabras clave
+    const categorizedSuggestions = {
+      "Mejoras en Atención y Servicios": [] as string[],
+      "Mejoras en Productos": [] as string[],
+      "Mejoras Tecnológicas": [] as string[]
+    };
+
+    suggestions.forEach(suggestion => {
+      const lowerSuggestion = suggestion.toLowerCase();
+      
+      // Palabras clave para categorización
+      if (lowerSuggestion.includes('atención') || 
+          lowerSuggestion.includes('servicio') || 
+          lowerSuggestion.includes('amabilidad') || 
+          lowerSuggestion.includes('horario') || 
+          lowerSuggestion.includes('personal') ||
+          lowerSuggestion.includes('asesor') ||
+          lowerSuggestion.includes('tiempo') ||
+          lowerSuggestion.includes('respuesta')) {
+        categorizedSuggestions["Mejoras en Atención y Servicios"].push(suggestion);
+      } else if (lowerSuggestion.includes('tasa') || 
+                 lowerSuggestion.includes('interés') || 
+                 lowerSuggestion.includes('cdt') || 
+                 lowerSuggestion.includes('producto') ||
+                 lowerSuggestion.includes('tarifa') ||
+                 lowerSuggestion.includes('costo')) {
+        categorizedSuggestions["Mejoras en Productos"].push(suggestion);
+      } else if (lowerSuggestion.includes('página') || 
+                 lowerSuggestion.includes('web') || 
+                 lowerSuggestion.includes('tecnolog') || 
+                 lowerSuggestion.includes('sistema') ||
+                 lowerSuggestion.includes('digital') ||
+                 lowerSuggestion.includes('app')) {
+        categorizedSuggestions["Mejoras Tecnológicas"].push(suggestion);
+      } else {
+        // Si no encaja en ninguna categoría específica, va a servicios
+        categorizedSuggestions["Mejoras en Atención y Servicios"].push(suggestion);
+      }
+    });
+
+    const totalSuggestions = suggestions.length;
+    
+    // Crear resultado con porcentajes calculados
+    const result: SuggestionData[] = [];
+
+    Object.entries(categorizedSuggestions).forEach(([categoria, categorySuggestions]) => {
+      if (categorySuggestions.length > 0) {
+        const porcentaje = Math.round((categorySuggestions.length / totalSuggestions) * 100);
+        
+        // Contar frecuencia de sugerencias similares
+        const suggestionCounts = new Map<string, number>();
+        categorySuggestions.forEach(suggestion => {
+          const key = suggestion.substring(0, 50); // Usar primeros 50 caracteres como clave
+          suggestionCounts.set(key, (suggestionCounts.get(key) || 0) + 1);
+        });
+
+        // Obtener las 3 sugerencias más frecuentes
+        const topSuggestions = Array.from(suggestionCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([suggestion, count]) => ({
+            sugerencia: suggestion,
+            porcentaje: Math.round((count / categorySuggestions.length) * porcentaje)
+          }));
+
+        result.push({
+          categoria,
+          porcentaje,
+          detalles: topSuggestions.length > 0 ? topSuggestions : undefined
+        });
+      }
+    });
+
+    return result.length > 0 ? result : [
       {
         categoria: "Mejoras en Atención y Servicios",
         porcentaje: 53,
@@ -361,6 +473,98 @@ export class SatisfactionDataService {
     ];
   }
 
+  // Nuevo método con análisis de IA
+  async getEnhancedSuggestionData(): Promise<EnhancedSuggestionData[]> {
+    if (this.data.length === 0) return [];
+
+    this.log('🤖 AI Analysis: Starting enhanced suggestion analysis...');
+
+    // Extraer todas las sugerencias no vacías
+    const suggestions = this.data
+      .map(record => record.sugerencias)
+      .filter(suggestion => suggestion && suggestion.trim() !== '' && suggestion.trim() !== '""""""' && suggestion.trim() !== 'No' && suggestion.trim() !== 'Ninguna')
+      .map(suggestion => suggestion.replace(/^"|"$/g, '').trim()) // Limpiar comillas
+      .filter(suggestion => suggestion.length > 0);
+
+    if (suggestions.length === 0) {
+      this.log('⚠️ AI Analysis: No valid suggestions found');
+      return [];
+    }
+
+    this.log(`🤖 AI Analysis: Processing ${suggestions.length} suggestions...`);
+
+    // Analizar todas las sugerencias con IA
+    const analyzedSuggestions = aiAnalysisService.analyzeAllSuggestions(suggestions);
+    
+    // Generar insights por categoría
+    const categoryInsights = aiAnalysisService.generateCategoryInsights(analyzedSuggestions);
+
+    this.log(`🤖 AI Analysis: Generated ${categoryInsights.length} category insights`);
+
+    // Convertir insights a formato EnhancedSuggestionData
+    const enhancedData: EnhancedSuggestionData[] = categoryInsights.map(insight => {
+      // Obtener sugerencias analizadas para esta categoría
+      const categoryAnalyzedSuggestions = analyzedSuggestions.filter(
+        analyzed => {
+          const categoryInfo = aiAnalysisService.getCategoryInfo(analyzed.category);
+          return categoryInfo?.name === insight.category;
+        }
+      );
+
+      // Crear detalles basados en las sugerencias más frecuentes y representativas
+      const suggestionFrequency = new Map<string, number>();
+      categoryAnalyzedSuggestions.forEach(suggestion => {
+        const cleanText = suggestion.cleanedText;
+        suggestionFrequency.set(cleanText, (suggestionFrequency.get(cleanText) || 0) + 1);
+      });
+
+      // Obtener las sugerencias más frecuentes
+      const topSuggestions = Array.from(suggestionFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([text, frequency]) => {
+          const percentage = Math.round((frequency / categoryAnalyzedSuggestions.length) * insight.percentage);
+          return {
+            sugerencia: text.length > 50 ? text.substring(0, 47) + '...' : text,
+            porcentaje: Math.max(1, percentage) // Asegurar que no sea 0
+          };
+        });
+
+      // Ajustar porcentajes para que sumen correctamente
+      const totalDetailPercentage = topSuggestions.reduce((sum, detail) => sum + detail.porcentaje, 0);
+      if (totalDetailPercentage > insight.percentage && topSuggestions.length > 0) {
+        // Redistribuir proporcionalmente
+        const factor = insight.percentage / totalDetailPercentage;
+        topSuggestions.forEach(detail => {
+          detail.porcentaje = Math.max(1, Math.round(detail.porcentaje * factor));
+        });
+      }
+
+      return {
+        categoria: insight.category,
+        porcentaje: insight.percentage,
+        detalles: topSuggestions.length > 0 ? topSuggestions : undefined,
+        aiInsights: insight,
+        analyzedSuggestions: categoryAnalyzedSuggestions
+      };
+    });
+
+    // Verificar que los porcentajes sumen 100% (o cerca)
+    const totalPercentage = enhancedData.reduce((sum, category) => sum + category.porcentaje, 0);
+    if (Math.abs(totalPercentage - 100) > 5) {
+      this.log(`⚠️ AI Analysis: Total percentage is ${totalPercentage}%, adjusting...`);
+      
+      // Ajustar proporcionalmente para que sume 100%
+      const factor = 100 / totalPercentage;
+      enhancedData.forEach(category => {
+        category.porcentaje = Math.round(category.porcentaje * factor);
+      });
+    }
+
+    this.log('✅ AI Analysis: Enhanced suggestion data generated successfully');
+    return enhancedData.sort((a, b) => b.porcentaje - a.porcentaje); // Ordenar por porcentaje descendente
+  }
+
   private calculateAverage(metric: keyof SatisfactionRecord): number {
     const values = this.data
       .map(d => d[metric] as number)
@@ -379,6 +583,10 @@ export class SatisfactionDataService {
     const diff = Math.abs(cityAvg - nationalAvg);
     if (diff < 0.1) return 'equal';
     return cityAvg > nationalAvg ? 'higher' : 'lower';
+  }
+
+  isDataLoaded(): boolean {
+    return this.isLoaded && this.data.length > 0;
   }
 
   getData(): SatisfactionRecord[] {
