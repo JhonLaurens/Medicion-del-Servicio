@@ -1,0 +1,12 @@
+﻿{
+  "mcpServers": {
+    "mcp-pandoc": {
+      "command": "python",
+      "args": ["-m", "mcp_pandoc"],
+      "env": {
+        "PANDOC_STANDALONE": false,
+        "PANDOC_SELF_CONTAINED": false
+      }
+    }
+  }
+}

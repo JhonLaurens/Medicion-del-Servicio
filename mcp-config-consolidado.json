@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "mcp-pandoc": {
+      "command": "python",
+      "args": ["-m", "mcp_pandoc"],
+      "env": {
+        "PANDOC_STANDALONE": false,
+        "PANDOC_SELF_CONTAINED": false,
+        "PANDOC_USE_INTERNAL": true,
+        "PANDOC_SKIP_VALIDATION": true
+      }
+    },
+    "mcp.config.usrlocalmcp.MS365 Documents": {
+      "command": "node",
+      "args": ["C:\\Users\\jhonjara\\.config\\usrlocalmcp\\MS365 Documents\\dist\\index.js"],
+      "env": {}
+    },
+    "mcp.config.usrlocalmcp.PDF Reader": {
+      "command": "node",
+      "args": ["C:\\Users\\jhonjara\\.config\\usrlocalmcp\\PDF Reader\\dist\\index.js"],
+      "env": {}
+    },
+    "mcp.config.usrlocalmcp.Google API": {
+      "command": "node",
+      "args": ["C:\\Users\\jhonjara\\.config\\usrlocalmcp\\Google API\\dist\\index.js"],
+      "env": {}
+    }
+  }
+}

@@ -195,3 +195,66 @@ export interface ColtefinancieraSurveyData {
   satisfaccionGeneral: number;
   lealtad: number;
 }
+
+// Interfaces para el reporte de participación de ejecutivos optimizado
+export interface ManagerData {
+  name: string;
+  surveys: number;
+  percentage: number;
+  coverageRate: number;
+  totalUniverse: number;
+  category: string;
+  agencia?: string;
+  segmento?: string;
+  ciudad?: string;
+  tipoEjecutivo?: string;
+  executiveInfo?: any;
+}
+
+export interface FilterStats {
+  filterValue: string;
+  totalSurveys: number;
+  averageRating: number;
+  claridadPromedio: number;
+  recomendacionPromedio: number;
+  satisfaccionPromedio: number;
+  lealtadPromedio: number;
+}
+
+export interface AgencyInfo {
+  name: string;
+  totalSurveys: number;
+  totalManagers: number;
+  activeManagers: number;
+  city: string;
+  segment: string;
+}
+
+export interface PaginationConfig {
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+}
+
+export interface FilterPreset {
+  id: string;
+  name: string;
+  filters: {
+    tipoEjecutivo: string;
+    segmento: string;
+    ciudad: string;
+    agencia: string;
+    searchText: string;
+  };
+}
+
+export interface ExportData {
+  managers: ManagerData[];
+  filterStats: FilterStats[];
+  summary: {
+    totalSurveys: number;
+    totalManagers: number;
+    activeManagers: number;
+    averagePerActive: number;
+  };
+}
