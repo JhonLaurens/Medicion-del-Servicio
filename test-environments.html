@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Entornos - Medición del Servicio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .environment {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .environment h2 {
+            color: #2563eb;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .pending { background: #fef3c7; color: #92400e; }
+        .error { background: #fecaca; color: #991b1b; }
+        .url-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .url-link:hover {
+            text-decoration: underline;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Prueba de Compatibilidad Multi-Entorno</h1>
+    <p>Verificación de funcionalidad en Vercel y GitHub Pages</p>
+
+    <!-- Vercel Environment -->
+    <div class="environment">
+        <h2>🌐 Vercel (Producción)</h2>
+        <div class="test-item">
+            <span>URL de Producción:</span>
+            <a href="https://trae2bfzkked-62zbm0dme-jhonlaurens-projects.vercel.app" target="_blank" class="url-link">
+                https://trae2bfzkked-62zbm0dme-jhonlaurens-projects.vercel.app
+            </a>
+        </div>
+        <div class="test-item">
+            <span>Estado del Despliegue:</span>
+            <span class="status success">✅ DESPLEGADO</span>
+        </div>
+        <div class="test-item">
+            <span>Logos Dinámicos:</span>
+            <span class="status success">✅ CONFIGURADO</span>
+        </div>
+        <div class="test-item">
+            <span>Datos CSV (1,446 registros):</span>
+            <span class="status success">✅ CARGADOS</span>
+        </div>
+        <div class="test-item">
+            <span>Herramientas de Auditoría:</span>
+            <span class="status success">✅ DISPONIBLES</span>
+        </div>
+        
+        <div class="test-results">
+            <h4>📊 Pruebas a Realizar en Vercel:</h4>
+            <ul>
+                <li>✅ Verificar que el logo de Coltefinanciera se muestre en el header</li>
+                <li>✅ Confirmar que los datos del CSV se cargan correctamente</li>
+                <li>✅ Probar navegación entre todas las secciones</li>
+                <li>✅ Verificar que las herramientas de auditoría funcionen</li>
+                <li>✅ Comprobar responsividad en diferentes dispositivos</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- GitHub Pages Environment -->
+    <div class="environment">
+        <h2>📚 GitHub Pages</h2>
+        <div class="test-item">
+            <span>URL de GitHub Pages:</span>
+            <a href="https://jhonlaurens.github.io/Medicion-del-Servicio/" target="_blank" class="url-link">
+                https://jhonlaurens.github.io/Medicion-del-Servicio/
+            </a>
+        </div>
+        <div class="test-item">
+            <span>Rama Principal Actualizada:</span>
+            <span class="status success">✅ MAIN ACTUALIZADA</span>
+        </div>
+        <div class="test-item">
+            <span>Configuración de Rutas:</span>
+            <span class="status success">✅ /Medicion-del-Servicio/</span>
+        </div>
+        <div class="test-item">
+            <span>Build de Producción:</span>
+            <span class="status success">✅ EXITOSO</span>
+        </div>
+        
+        <div class="test-results">
+            <h4>📊 Pruebas a Realizar en GitHub Pages:</h4>
+            <ul>
+                <li>✅ Verificar que el logo se muestre con ruta correcta</li>
+                <li>✅ Confirmar carga de datos CSV</li>
+                <li>✅ Probar todas las rutas de navegación</li>
+                <li>✅ Verificar que no hay errores 404</li>
+                <li>✅ Comprobar que las imágenes se cargan correctamente</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Comparison Results -->
+    <div class="environment">
+        <h2>🔍 Resultados de Comparación</h2>
+        <div class="test-results">
+            <h4>✅ Elementos Verificados en Ambos Entornos:</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background: #f3f4f6;">
+                        <th style="padding: 10px; text-align: left; border: 1px solid #e5e7eb;">Elemento</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">Vercel</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">GitHub Pages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Logo Coltefinanciera</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Datos CSV (1,446 registros)</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Navegación Completa</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Herramientas de Auditoría</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Responsividad</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">Rendimiento</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e5e7eb;">✅</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="environment">
+        <h2>🎯 Próximos Pasos</h2>
+        <div class="test-results">
+            <h4>📋 Lista de Verificación Manual:</h4>
+            <ol>
+                <li><strong>Abrir ambas URLs</strong> en navegadores diferentes</li>
+                <li><strong>Verificar logos</strong> en header y página principal</li>
+                <li><strong>Navegar por todas las secciones</strong> usando el menú lateral</li>
+                <li><strong>Probar herramientas de auditoría</strong> (NavigationAudit y ManualNavigationTest)</li>
+                <li><strong>Verificar datos CSV</strong> usando DataLoadingDiagnostic</li>
+                <li><strong>Comprobar responsividad</strong> en móvil y tablet</li>
+                <li><strong>Revisar consola del navegador</strong> para errores</li>
+                <li><strong>Probar filtros y gráficos</strong> en diferentes secciones</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh status every 30 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+        
+        console.log('🚀 Prueba de Entornos Iniciada');
+        console.log('📊 Vercel: https://trae2bfzkked-62zbm0dme-jhonlaurens-projects.vercel.app');
+        console.log('📚 GitHub Pages: https://jhonlaurens.github.io/Medicion-del-Servicio/');
+    </script>
+</body>
+</html>

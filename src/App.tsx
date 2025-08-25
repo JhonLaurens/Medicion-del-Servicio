@@ -17,6 +17,7 @@ import DataLoadingDiagnostic from './components/DataLoadingDiagnostic';
 import NavigationAudit from './components/NavigationAudit';
 import ManualNavigationTest from './test/ManualNavigationTest';
 import ManualTestSuite from './test/ManualTestSuite';
+import EnvironmentCompatibilityTest from './test/EnvironmentCompatibilityTest';
 import { satisfactionDataService } from './services/dataService';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -24,7 +25,8 @@ type PageType = 'inicio' | 'ficha-tecnica' | 'dashboard-general' | 'analisis-seg
                 'analisis-geografico' | 'analisis-sugerencias' | 'explorador-datos' | 
                 'participacion-gerentes' | 'metricas-completas' | 'pruebas-componentes' | 'diagnostico' | 'diagnostico-datos' | 'auditoria-navegacion'
   | 'prueba-navegacion-manual'
-  | 'suite-pruebas-manual';
+  | 'suite-pruebas-manual'
+  | 'prueba-compatibilidad-entornos';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('inicio');
@@ -62,7 +64,7 @@ const App: React.FC = () => {
     const validPages: PageType[] = [
       'inicio', 'ficha-tecnica', 'dashboard-general', 'analisis-segmento',
       'analisis-geografico', 'analisis-sugerencias', 'explorador-datos',
-      'participacion-gerentes', 'metricas-completas', 'pruebas-componentes', 'diagnostico', 'diagnostico-datos', 'auditoria-navegacion', 'prueba-navegacion-manual'
+      'participacion-gerentes', 'metricas-completas', 'pruebas-componentes', 'diagnostico', 'diagnostico-datos', 'auditoria-navegacion', 'prueba-navegacion-manual', 'suite-pruebas-manual', 'prueba-compatibilidad-entornos'
     ];
     return validPages.includes(page as PageType);
   };
@@ -148,6 +150,8 @@ const App: React.FC = () => {
           return <ManualNavigationTest />;
         case 'suite-pruebas-manual':
           return <ManualTestSuite />;
+        case 'prueba-compatibilidad-entornos':
+          return <EnvironmentCompatibilityTest />;
         // case 'test':
         //   return <TestComponent />; // Removido para producción
         default:
