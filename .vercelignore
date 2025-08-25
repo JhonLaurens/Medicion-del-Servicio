@@ -1,0 +1,63 @@
+# Archivos de desarrollo
+node_modules
+.env
+.env.local
+.env.*.local
+
+# Archivos de build local
+.vite
+.cache
+
+# Archivos de testing
+.pytest_cache
+coverage
+
+# Archivos de respaldo y temporales
+respaldo
+*.log
+*.tmp
+
+# Scripts de PowerShell y diagnóstico
+*.ps1
+*.bat
+*.py
+*.cjs
+*.mjs
+debug-*
+test-*
+validar-*
+verificar-*
+simular-*
+analyze-*
+check-*
+fix-*
+diagnose-*
+consolidar-*
+aplicar-*
+solucion-*
+
+# Archivos de documentación de desarrollo
+*.md
+!README.md
+
+# Archivos de configuración MCP
+mcp-config-*.json
+
+# Archivos de metadatos
+metadata.json
+types.ts
+
+# Archivos de componentes de prueba
+TestComponent.tsx
+components/TestComponent.tsx
+components/TestSimple.tsx
+components/AppTest.tsx
+components/CSVTestComponent.tsx
+components/GeneralDashboardTest.tsx
+components/GeneralDashboard_new.tsx
+
+# Archivos HTML de diagnóstico
+public/diagnostic.html
+public/server-status.html
+public/test.html
+public/test-csv-access.html
