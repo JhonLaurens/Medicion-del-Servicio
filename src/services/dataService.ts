@@ -28,7 +28,11 @@ export class SatisfactionDataService {
     try {
       this.log('🚀 DataService: Starting data load process...');
       
-      const response = await fetch('/Medicion-del-Servicio/datos.csv');
+      // Determinar la ruta base según el entorno
+      const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+      const csvPath = isVercel ? '/datos.csv' : '/Medicion-del-Servicio/datos.csv';
+      
+      const response = await fetch(csvPath);
       
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       
