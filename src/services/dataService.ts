@@ -30,7 +30,8 @@ export class SatisfactionDataService {
       
       // Determinar la ruta base según el entorno
       const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-      const csvPath = isVercel ? '/datos.csv' : '/Medicion-del-Servicio/datos.csv';
+      const isDevelopment = import.meta.env.DEV;
+      const csvPath = isVercel || isDevelopment ? '/datos.csv' : '/Medicion-del-Servicio/datos.csv';
       
       const response = await fetch(csvPath);
       
