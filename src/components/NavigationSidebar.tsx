@@ -17,7 +17,8 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ currentPage, onPa
     { id: 'participacion-gerentes', label: 'Participación de Gerentes', icon: '👨‍💼', description: 'Reporte ejecutivo de cobertura' },
     { id: 'explorador-datos', label: 'Explorador de Datos', icon: '🔍', description: 'Análisis exploratorio interactivo' },
     { id: 'pruebas-componentes', label: 'Pruebas de Componentes', icon: '🧪', description: 'Validación exhaustiva de todos los componentes' },
-    { id: 'diagnostico', label: 'Diagnóstico del Sistema', icon: '🔍', description: 'Debugging y estado de la aplicación' }
+    { id: 'diagnostico', label: 'Diagnóstico del Sistema', icon: '🔍', description: 'Debugging y estado de la aplicación' },
+    { id: 'diagnostico-datos', label: 'Diagnóstico de Datos', icon: '🔍', description: 'Análisis y validación de datos' }
   ];
 
   return (

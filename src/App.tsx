@@ -13,12 +13,18 @@ import ManagerParticipationReport from './components/ManagerParticipationReport'
 import MetricsOverview from './components/MetricsOverview';
 import ComponentTests from './test/ComponentTests';
 import DiagnosticComponent from './components/DiagnosticComponent';
+import DataLoadingDiagnostic from './components/DataLoadingDiagnostic';
+import NavigationAudit from './components/NavigationAudit';
+import ManualNavigationTest from './test/ManualNavigationTest';
+import ManualTestSuite from './test/ManualTestSuite';
 import { satisfactionDataService } from './services/dataService';
 import ErrorBoundary from './components/ErrorBoundary';
 
 type PageType = 'inicio' | 'ficha-tecnica' | 'dashboard-general' | 'analisis-segmento' | 
                 'analisis-geografico' | 'analisis-sugerencias' | 'explorador-datos' | 
-                'participacion-gerentes' | 'metricas-completas' | 'pruebas-componentes' | 'diagnostico';
+                'participacion-gerentes' | 'metricas-completas' | 'pruebas-componentes' | 'diagnostico' | 'diagnostico-datos' | 'auditoria-navegacion'
+  | 'prueba-navegacion-manual'
+  | 'suite-pruebas-manual';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('inicio');
@@ -56,7 +62,7 @@ const App: React.FC = () => {
     const validPages: PageType[] = [
       'inicio', 'ficha-tecnica', 'dashboard-general', 'analisis-segmento',
       'analisis-geografico', 'analisis-sugerencias', 'explorador-datos',
-      'participacion-gerentes', 'metricas-completas', 'pruebas-componentes', 'diagnostico'
+      'participacion-gerentes', 'metricas-completas', 'pruebas-componentes', 'diagnostico', 'diagnostico-datos', 'auditoria-navegacion', 'prueba-navegacion-manual'
     ];
     return validPages.includes(page as PageType);
   };
@@ -134,6 +140,14 @@ const App: React.FC = () => {
           return <ComponentTests />;
         case 'diagnostico':
           return <DiagnosticComponent />;
+        case 'diagnostico-datos':
+          return <DataLoadingDiagnostic />;
+        case 'auditoria-navegacion':
+          return <NavigationAudit />;
+        case 'prueba-navegacion-manual':
+          return <ManualNavigationTest />;
+        case 'suite-pruebas-manual':
+          return <ManualTestSuite />;
         // case 'test':
         //   return <TestComponent />; // Removido para producción
         default:

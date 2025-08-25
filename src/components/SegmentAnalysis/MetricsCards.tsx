@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { KPIData } from '../../types';
 
 interface MetricsCardsProps {
@@ -6,7 +6,7 @@ interface MetricsCardsProps {
   hasValidData: boolean;
 }
 
-const MetricsCards: React.FC<MetricsCardsProps> = ({ kpiData, hasValidData }) => {
+const MetricsCards: React.FC<MetricsCardsProps> = React.memo(({ kpiData, hasValidData }) => {
   if (!hasValidData) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -23,43 +23,48 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ kpiData, hasValidData }) =>
     );
   }
 
-  const calculateMetricsBySegment = (segment: string) => {
-    const segmentData = kpiData.filter(item => item.segment === segment);
-    
-    if (segmentData.length === 0) {
-      return {
-        satisfaccion: 0,
-        claridad: 0,
-        recomendacion: 0,
-        lealtad: 0,
-        totalResponses: 0
-      };
-    }
+  // Memoizar cálculos pesados
+  const { personasMetrics, empresasMetrics } = useMemo(() => {
+    const calculateMetricsBySegment = (segment: string) => {
+      const segmentData = kpiData.filter(item => item.segment === segment);
+      
+      if (segmentData.length === 0) {
+        return {
+          satisfaccion: 0,
+          claridad: 0,
+          recomendacion: 0,
+          lealtad: 0,
+          totalResponses: 0
+        };
+      }
 
-    const satisfaccionItems = segmentData.filter(item => item.metric === 'Satisfacción General');
-    const claridadItems = segmentData.filter(item => item.metric === 'Claridad');
-    const recomendacionItems = segmentData.filter(item => item.metric === 'Recomendación');
-    const lealtadItems = segmentData.filter(item => item.metric === 'Lealtad');
+      const satisfaccionItems = segmentData.filter(item => item.metric === 'Satisfacción General');
+      const claridadItems = segmentData.filter(item => item.metric === 'Claridad');
+      const recomendacionItems = segmentData.filter(item => item.metric === 'Recomendación');
+      const lealtadItems = segmentData.filter(item => item.metric === 'Lealtad');
+
+      return {
+        satisfaccion: satisfaccionItems.length > 0 
+          ? Number((satisfaccionItems.reduce((sum, item) => sum + item.averageRating, 0) / satisfaccionItems.length).toFixed(2))
+          : 0,
+        claridad: claridadItems.length > 0 
+          ? Number((claridadItems.reduce((sum, item) => sum + item.averageRating, 0) / claridadItems.length).toFixed(2))
+          : 0,
+        recomendacion: recomendacionItems.length > 0 
+          ? Number((recomendacionItems.reduce((sum, item) => sum + item.averageRating, 0) / recomendacionItems.length).toFixed(2))
+          : 0,
+        lealtad: lealtadItems.length > 0 
+          ? Number((lealtadItems.reduce((sum, item) => sum + item.averageRating, 0) / lealtadItems.length).toFixed(2))
+          : 0,
+        totalResponses: segmentData.reduce((sum, item) => sum + item.totalResponses, 0)
+      };
+    };
 
     return {
-      satisfaccion: satisfaccionItems.length > 0 
-        ? Number((satisfaccionItems.reduce((sum, item) => sum + item.averageRating, 0) / satisfaccionItems.length).toFixed(2))
-        : 0,
-      claridad: claridadItems.length > 0 
-        ? Number((claridadItems.reduce((sum, item) => sum + item.averageRating, 0) / claridadItems.length).toFixed(2))
-        : 0,
-      recomendacion: recomendacionItems.length > 0 
-        ? Number((recomendacionItems.reduce((sum, item) => sum + item.averageRating, 0) / recomendacionItems.length).toFixed(2))
-        : 0,
-      lealtad: lealtadItems.length > 0 
-        ? Number((lealtadItems.reduce((sum, item) => sum + item.averageRating, 0) / lealtadItems.length).toFixed(2))
-        : 0,
-      totalResponses: segmentData.reduce((sum, item) => sum + item.totalResponses, 0)
+      personasMetrics: calculateMetricsBySegment('Personas'),
+      empresasMetrics: calculateMetricsBySegment('Empresas')
     };
-  };
-
-  const personasMetrics = calculateMetricsBySegment('Personas');
-  const empresasMetrics = calculateMetricsBySegment('Empresas');
+  }, [kpiData]);
 
   const metrics = [
     {
@@ -173,6 +178,8 @@ const MetricsCards: React.FC<MetricsCardsProps> = ({ kpiData, hasValidData }) =>
       </div>
     </div>
   );
-};
+});
+
+MetricsCards.displayName = 'MetricsCards';
 
 export default MetricsCards;

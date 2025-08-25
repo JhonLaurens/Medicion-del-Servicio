@@ -17,6 +17,7 @@ import {
   ExecutiveAnalysisService,
   ExecutiveToAnalyze,
 } from "../services/executiveAnalysisService";
+import { satisfactionDataService } from '../services/dataService';
 
 interface ManagerData {
   name: string;
@@ -80,7 +81,7 @@ const ManagerParticipationReport: React.FC = () => {
     ExecutiveToAnalyze[]
   >([]);
 
-  const dataService = new SatisfactionDataService();
+  // Usar la instancia singleton del dataService
   const executiveService = new ExecutiveAnalysisService();
 
   useEffect(() => {
@@ -90,7 +91,7 @@ const ManagerParticipationReport: React.FC = () => {
 
         // Cargar ambos archivos en paralelo
         await Promise.all([
-          dataService.loadData(),
+          satisfactionDataService.loadData(),
           executiveService.loadExecutivesToAnalyze(),
         ]);
 
@@ -147,13 +148,13 @@ const ManagerParticipationReport: React.FC = () => {
   // Process data when both services are loaded
   useEffect(() => {
     console.log("🔄 Checking if data processing should run...");
-    console.log("🔍 dataService.isDataLoaded():", dataService.isDataLoaded());
+    console.log("🔍 satisfactionDataService.isDataLoaded():", satisfactionDataService.isDataLoaded());
     console.log(
       "🔍 executiveService.isDataLoaded():",
       executiveService.isDataLoaded()
     );
 
-    if (dataService.isDataLoaded() && executiveService.isDataLoaded()) {
+    if (satisfactionDataService.isDataLoaded() && executiveService.isDataLoaded()) {
       console.log("✅ Both services loaded, calling processManagerData...");
       processManagerData();
     } else {
@@ -166,7 +167,7 @@ const ManagerParticipationReport: React.FC = () => {
   const processManagerData = () => {
     console.log("🔄 processManagerData: Starting data processing...");
 
-    const data = dataService.getData();
+    const data = satisfactionDataService.getData();
     console.log("🔍 DEBUG: Total data records:", data?.length || 0);
 
     if (!data || data.length === 0) {

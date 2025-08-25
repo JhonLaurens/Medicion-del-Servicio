@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import OptimizedImage from './OptimizedImage';
 
 interface HomePageProps {
   onNavigate?: (page: string) => void;
@@ -95,21 +96,17 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         {/* Corporate Header Section */}
         <header className="mb-12 animate-slide-in-top">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-white/20 shadow-2xl mb-8">
-            {imageError ? (
-              <div className="w-28 h-28 mx-auto rounded-xl shadow-2xl border-4 border-white/20 bg-white/20 flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">CF</span>
-              </div>
-            ) : (
-              <img
-                src="/Medicion-del-Servicio/images/logo.jpg"
-                alt="Logo Coltefinanciera"
-                className={`w-28 h-28 object-contain mx-auto rounded-xl shadow-2xl border-4 border-white/20 transition-opacity duration-300 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                onLoad={() => setImageLoaded(true)}
-                onError={() => setImageError(true)}
-              />
-            )}
+            <OptimizedImage
+              src="/images/logo.jpg"
+              alt="Logo Coltefinanciera"
+              className="w-28 h-28 object-contain mx-auto rounded-xl shadow-2xl border-4 border-white/20"
+              fallbackSrc="/images/Coltefinanciera.png"
+              enableLazyLoading={false}
+              enableCache={true}
+              showLoadingSpinner={true}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
           </div>
         </header>
 

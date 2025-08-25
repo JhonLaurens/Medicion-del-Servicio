@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import OptimizedImage from './OptimizedImage';
 
 interface HeaderProps {
   currentPage?: string;
@@ -11,11 +12,16 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigateHome }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
+    // Determinar la ruta base según el entorno
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    const isDevelopment = import.meta.env.DEV;
+    const logoPath = isVercel || isDevelopment ? '/images/Coltefinanciera.png' : '/Medicion-del-Servicio/images/Coltefinanciera.png';
+    
     // Precargar la imagen del logo
     const img = new Image();
     img.onload = () => setImageLoaded(true);
     img.onerror = () => setImageError(true);
-    img.src = "/Medicion-del-Servicio/images/Coltefinanciera.png";
+    img.src = logoPath;
 
     // Actualizar la hora cada minuto
     const timer = setInterval(() => {
@@ -70,21 +76,17 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigateHome }) => {
               className="bg-white p-2 sm:p-3 rounded-xl shadow-lg ring-2 ring-white/20 backdrop-blur-sm hover:ring-white/40 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/50"
               aria-label="Ir al inicio"
             >
-              {imageError ? (
-                <div className="h-8 sm:h-12 w-8 sm:w-12 bg-brand-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm sm:text-lg">CF</span>
-                </div>
-              ) : (
-                <img
-                  src="/Medicion-del-Servicio/images/Coltefinanciera.png"
-                  alt="Logo Coltefinanciera"
-                  className={`h-8 sm:h-12 w-auto object-contain transition-opacity duration-300 ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                />
-              )}
+              <OptimizedImage
+                src="/images/Coltefinanciera.png"
+                alt="Logo Coltefinanciera"
+                className="h-8 sm:h-12 w-auto object-contain"
+                fallbackSrc="/images/logo.jpg"
+                enableLazyLoading={false}
+                enableCache={true}
+                showLoadingSpinner={false}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
             </button>
             <div className="space-y-1">
               <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
