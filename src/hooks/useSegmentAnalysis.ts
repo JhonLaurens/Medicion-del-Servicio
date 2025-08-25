@@ -2,6 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { satisfactionDataService } from '../services/dataService';
 import { KPIData } from '../types';
 
+interface SegmentStats {
+  satisfaction: number;
+  clarity: number;
+  recommendation: number;
+  loyalty: number;
+  totalResponses: number;
+}
+
 interface OverallStats {
   totalResponses: number;
   personasResponses: number;
@@ -9,6 +17,8 @@ interface OverallStats {
   personasAverage: number;
   empresasAverage: number;
   difference: number;
+  personasStats: SegmentStats;
+  empresasStats: SegmentStats;
 }
 
 interface DistributionData {
@@ -57,12 +67,58 @@ export const useSegmentAnalysis = () => {
         empresasResponses: 0,
         personasAverage: 0,
         empresasAverage: 0,
-        difference: 0
+        difference: 0,
+        personasStats: {
+          satisfaction: 0,
+          clarity: 0,
+          recommendation: 0,
+          loyalty: 0,
+          totalResponses: 0
+        },
+        empresasStats: {
+          satisfaction: 0,
+          clarity: 0,
+          recommendation: 0,
+          loyalty: 0,
+          totalResponses: 0
+        }
       };
     }
 
     const personasData = kpiData.filter(item => item.segment === 'Personas');
     const empresasData = kpiData.filter(item => item.segment === 'Empresas');
+
+    // Función para calcular estadísticas por métrica
+    const calculateMetricStats = (data: KPIData[], metricName: string): number => {
+      const metricData = data.filter(item => 
+        item.metric === metricName || 
+        item.metric === 'Satisfacción General' && metricName === 'satisfaction' ||
+        item.metric === 'Claridad' && metricName === 'clarity' ||
+        item.metric === 'Recomendación' && metricName === 'recommendation' ||
+        item.metric === 'Lealtad' && metricName === 'loyalty'
+      );
+      return metricData.length > 0 
+        ? metricData.reduce((sum, item) => sum + item.averageRating, 0) / metricData.length 
+        : 0;
+    };
+
+    // Calcular estadísticas para Personas
+    const personasStats: SegmentStats = {
+      satisfaction: Number(calculateMetricStats(personasData, 'satisfaction').toFixed(2)),
+      clarity: Number(calculateMetricStats(personasData, 'clarity').toFixed(2)),
+      recommendation: Number(calculateMetricStats(personasData, 'recommendation').toFixed(2)),
+      loyalty: Number(calculateMetricStats(personasData, 'loyalty').toFixed(2)),
+      totalResponses: personasData.reduce((sum, item) => sum + item.totalResponses, 0)
+    };
+
+    // Calcular estadísticas para Empresas
+    const empresasStats: SegmentStats = {
+      satisfaction: Number(calculateMetricStats(empresasData, 'satisfaction').toFixed(2)),
+      clarity: Number(calculateMetricStats(empresasData, 'clarity').toFixed(2)),
+      recommendation: Number(calculateMetricStats(empresasData, 'recommendation').toFixed(2)),
+      loyalty: Number(calculateMetricStats(empresasData, 'loyalty').toFixed(2)),
+      totalResponses: empresasData.reduce((sum, item) => sum + item.totalResponses, 0)
+    };
 
     const personasAvg = personasData.length > 0 
       ? personasData.reduce((sum, item) => sum + item.averageRating, 0) / personasData.length 
@@ -74,11 +130,13 @@ export const useSegmentAnalysis = () => {
 
     return {
       totalResponses: kpiData.reduce((sum, item) => sum + item.totalResponses, 0),
-      personasResponses: personasData.reduce((sum, item) => sum + item.totalResponses, 0),
-      empresasResponses: empresasData.reduce((sum, item) => sum + item.totalResponses, 0),
+      personasResponses: personasStats.totalResponses,
+      empresasResponses: empresasStats.totalResponses,
       personasAverage: Number(personasAvg.toFixed(2)),
       empresasAverage: Number(empresasAvg.toFixed(2)),
-      difference: Number((personasAvg - empresasAvg).toFixed(2))
+      difference: Number((personasAvg - empresasAvg).toFixed(2)),
+      personasStats,
+      empresasStats
     };
   }, [kpiData, hasValidData]);
 

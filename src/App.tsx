@@ -11,12 +11,14 @@ import DataExplorer from './components/DataExplorer';
 // import TestComponent from './components/TestComponent'; // Removido para producción
 import ManagerParticipationReport from './components/ManagerParticipationReport';
 import MetricsOverview from './components/MetricsOverview';
+import ComponentTests from './test/ComponentTests';
+import DiagnosticComponent from './components/DiagnosticComponent';
 import { satisfactionDataService } from './services/dataService';
 import ErrorBoundary from './components/ErrorBoundary';
 
 type PageType = 'inicio' | 'ficha-tecnica' | 'dashboard-general' | 'analisis-segmento' | 
                 'analisis-geografico' | 'analisis-sugerencias' | 'explorador-datos' | 
-                'participacion-gerentes' | 'metricas-completas';
+                'participacion-gerentes' | 'metricas-completas' | 'pruebas-componentes' | 'diagnostico';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('inicio');
@@ -54,7 +56,7 @@ const App: React.FC = () => {
     const validPages: PageType[] = [
       'inicio', 'ficha-tecnica', 'dashboard-general', 'analisis-segmento',
       'analisis-geografico', 'analisis-sugerencias', 'explorador-datos',
-      'participacion-gerentes', 'metricas-completas', 'test'
+      'participacion-gerentes', 'metricas-completas', 'pruebas-componentes', 'diagnostico'
     ];
     return validPages.includes(page as PageType);
   };
@@ -128,6 +130,10 @@ const App: React.FC = () => {
           return <ManagerParticipationReport />;
         case 'metricas-completas':
           return <MetricsOverview />;
+        case 'pruebas-componentes':
+          return <ComponentTests />;
+        case 'diagnostico':
+          return <DiagnosticComponent />;
         // case 'test':
         //   return <TestComponent />; // Removido para producción
         default:

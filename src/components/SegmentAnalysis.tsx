@@ -64,7 +64,8 @@ const SegmentAnalysis: React.FC = memo(() => {
 
         {/* Resumen Ejecutivo */}
         <ExecutiveSummary 
-          overallStats={overallStats} 
+          personasStats={overallStats.personasStats}
+          empresasStats={overallStats.empresasStats}
           hasValidData={hasValidData} 
         />
 
