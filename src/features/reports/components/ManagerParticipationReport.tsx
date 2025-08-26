@@ -744,68 +744,106 @@ const ManagerParticipationReport: React.FC = () => {
                   ? "Ciudad"
                   : "Agencia"}
               </h4>
-              <div className="h-80">
-                <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={filterStats.slice(0, 10)}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="filterValue"
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        interval={0}
-                      />
-                      <YAxis domain={[0, 5]} />
-                      <Tooltip
-                        formatter={(value, name) => [
-                          typeof value === "number" ? value.toFixed(2) : value,
-                          name === "averageRating"
-                            ? "Promedio General"
-                            : name === "claridadPromedio"
-                            ? "Claridad"
-                            : name === "recomendacionPromedio"
-                            ? "Recomendación"
-                            : name === "satisfaccionPromedio"
-                            ? "Satisfacción"
-                            : name === "lealtadPromedio"
-                            ? "Lealtad"
-                            : name,
-                        ]}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="averageRating"
-                        fill="#3B82F6"
-                        name="Promedio General"
-                      />
-                      <Bar
-                        dataKey="claridadPromedio"
-                        fill="#10B981"
-                        name="Claridad"
-                      />
-                      <Bar
-                        dataKey="recomendacionPromedio"
-                        fill="#F59E0B"
-                        name="Recomendación"
-                      />
-                      <Bar
-                        dataKey="satisfaccionPromedio"
-                        fill="#EF4444"
-                        name="Satisfacción"
-                      />
-                      <Bar
-                        dataKey="lealtadPromedio"
-                        fill="#8B5CF6"
-                        name="Lealtad"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartErrorBoundary>
-              </div>
+              {filterStats.length === 0 ? (
+                <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📊</div>
+                    <p className="text-gray-500 font-medium">No hay datos disponibles para mostrar</p>
+                    <p className="text-gray-400 text-sm mt-1">Selecciona un filtro diferente o verifica los datos</p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ height: Math.max(400, filterStats.slice(0, 10).length * 40 + 150) }}>
+                  <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={filterStats.slice(0, 10)}
+                        margin={{ top: 30, right: 40, left: 40, bottom: 100 }}
+                        barCategoryGap="15%"
+                        barGap={2}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.7} />
+                        <XAxis
+                          dataKey="filterValue"
+                          angle={-45}
+                          textAnchor="end"
+                          height={90}
+                          interval={0}
+                          tick={{ fontSize: 12, fill: '#374151' }}
+                          axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          label={{ value: selectedFilterType === "tipoEjecutivo" ? "Tipo Ejecutivo" : selectedFilterType === "segmento" ? "Segmento" : selectedFilterType === "ciudad" ? "Ciudad" : "Agencia", position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fontSize: '14px', fontWeight: 'bold', fill: '#374151' } }}
+                        />
+                        <YAxis 
+                          domain={[0, 5]} 
+                          tick={{ fontSize: 12, fill: '#374151' }}
+                          axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                          label={{ value: 'Puntuación (1-5)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '14px', fontWeight: 'bold', fill: '#374151' } }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                            fontSize: '14px'
+                          }}
+                          labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}
+                          formatter={(value, name) => [
+                            typeof value === "number" ? value.toFixed(2) : value,
+                            name === "averageRating"
+                              ? "Promedio General"
+                              : name === "claridadPromedio"
+                              ? "Claridad"
+                              : name === "recomendacionPromedio"
+                              ? "Recomendación"
+                              : name === "satisfaccionPromedio"
+                              ? "Satisfacción"
+                              : name === "lealtadPromedio"
+                              ? "Lealtad"
+                              : name,
+                          ]}
+                        />
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px' }}
+                          iconType="rect"
+                        />
+                        <Bar
+                          dataKey="averageRating"
+                          fill="#3B82F6"
+                          name="Promedio General"
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="claridadPromedio"
+                          fill="#10B981"
+                          name="Claridad"
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="recomendacionPromedio"
+                          fill="#F59E0B"
+                          name="Recomendación"
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="satisfaccionPromedio"
+                          fill="#EF4444"
+                          name="Satisfacción"
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="lealtadPromedio"
+                          fill="#8B5CF6"
+                          name="Lealtad"
+                          radius={[2, 2, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartErrorBoundary>
+                </div>
+              )}
             </div>
           </div>
         ) : (

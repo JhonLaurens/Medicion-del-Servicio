@@ -139,7 +139,7 @@ export const useSegmentAnalysis = () => {
     }
 
     const personasData = kpiData.filter(item => item.segment === 'Personas');
-    const empresasData = kpiData.filter(item => item.segment === 'Empresas');
+    const empresasData = kpiData.filter(item => item.segment === 'Empresarial');
 
     // Función para calcular estadísticas por métrica
     const calculateMetricStats = (data: KPIData[], metricName: string): number => {
@@ -228,7 +228,7 @@ export const useSegmentAnalysis = () => {
     const ratingLabels = ['1 - Muy Insatisfecho', '2 - Insatisfecho', '3 - Neutral', '4 - Satisfecho', '5 - Muy Satisfecho'];
 
     const personasData = kpiData.filter(item => item.segment === 'Personas');
-    const empresasData = kpiData.filter(item => item.segment === 'Empresas');
+    const empresasData = kpiData.filter(item => item.segment === 'Empresarial');
 
     const personasDistribution = ratingLabels.map((label, index) => {
       const rating = index + 1;
@@ -280,7 +280,7 @@ export const useSegmentAnalysis = () => {
     
     return metrics.map(metric => {
       const personasItems = kpiData.filter(item => item.segment === 'Personas' && item.metric === metric);
-      const empresasItems = kpiData.filter(item => item.segment === 'Empresas' && item.metric === metric);
+      const empresasItems = kpiData.filter(item => item.segment === 'Empresarial' && item.metric === metric);
       
       const personasAvg = personasItems.length > 0 
         ? personasItems.reduce((sum, item) => sum + item.averageRating, 0) / personasItems.length 

@@ -77,11 +77,11 @@ const ImprovedDistributionChart: React.FC<ImprovedDistributionChartProps> = ({
       </div>
 
       {/* Gráfico de barras agrupadas */}
-      <div className="h-80 mb-4">
+      <div className="h-80 sm:h-96 mb-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
-            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 80 }}
             barCategoryGap="20%"
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -90,9 +90,9 @@ const ImprovedDistributionChart: React.FC<ImprovedDistributionChartProps> = ({
               angle={-45}
               textAnchor="end"
               height={80}
-              fontSize={12}
+              fontSize={11}
               stroke="#64748b"
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 10 }}
             />
             <YAxis 
               fontSize={12}

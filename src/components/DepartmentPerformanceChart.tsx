@@ -13,10 +13,10 @@ const DepartmentPerformanceChart: React.FC<DepartmentPerformanceChartProps> = ({
       <h3 className="text-xl font-semibold text-slate-700 mb-4">Department Performance (Avg. Rating)</h3>
       {data.length > 0 ? (
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
+          <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 60, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-            <XAxis type="number" domain={[1, 5]} tick={{ fontSize: 12, fill: '#4A5568' }} />
-            <YAxis dataKey="department" type="category" width={120} tick={{ fontSize: 10, fill: '#4A5568' }} />
+            <XAxis type="number" domain={[1, 5]} tick={{ fontSize: 11, fill: '#4A5568' }} />
+            <YAxis dataKey="department" type="category" width={140} tick={{ fontSize: 9, fill: '#4A5568' }} />
             <Tooltip
               contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '4px' }}
               labelStyle={{ fontWeight: 'bold', color: '#333' }}

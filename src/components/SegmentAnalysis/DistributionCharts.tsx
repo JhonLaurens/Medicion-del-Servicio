@@ -66,140 +66,117 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">📈 Distribución de Calificaciones</h2>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Gráfico Personas */}
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-blue-800 mb-4">
-            👥 Segmento Personas
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Total de respuestas: <span className="font-bold">{personasTotal.toLocaleString()}</span>
-          </p>
-          
-          <div className="flex justify-center mb-4">
-            <div className="w-80 h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={personasData.map(item => ({ ...item, total: personasTotal }))}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => renderCustomLabel(entry, personasTotal)}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {personasData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Distribución Personas */}
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+          <span className="mr-2">👥</span>
+          Distribución - Personas
+        </h3>
+        {personasData.length > 0 ? (
+          <div className="w-full h-80 sm:h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 30, right: 30, bottom: 50, left: 30 }}>
+                <Pie
+                  data={personasData}
+                  cx="50%"
+                  cy="45%"
+                  labelLine={false}
+                  label={(entry) => renderCustomLabel(entry, personasTotal)}
+                  outerRadius="60%"
+                  innerRadius="25%"
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {personasData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-64 text-slate-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div className="text-center">
+              <div className="text-4xl mb-2">👥</div>
+              <div className="text-lg font-medium mb-1">Sin datos disponibles</div>
+              <div className="text-sm text-gray-400">No hay información para personas</div>
             </div>
           </div>
-          
-          {/* Leyenda personalizada para Personas */}
-          <div className="space-y-2">
-            {personasData.map((entry, index) => {
-              const percentage = ((entry.value / personasTotal) * 100).toFixed(1);
-              return (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: entry.color }}
-                    ></div>
-                    <span className="text-gray-700">{entry.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-gray-800">{entry.value.toLocaleString()}</span>
-                    <span className="text-gray-500 ml-1">({percentage}%)</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Gráfico Empresas */}
-        <div className="text-center">
-          <h3 className="text-xl font-semibold text-orange-800 mb-4">
-            🏢 Segmento Empresas
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Total de respuestas: <span className="font-bold">{empresasTotal.toLocaleString()}</span>
-          </p>
-          
-          <div className="flex justify-center mb-4">
-            <div className="w-80 h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={empresasData.map(item => ({ ...item, total: empresasTotal }))}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => renderCustomLabel(entry, empresasTotal)}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {empresasData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          
-          {/* Leyenda personalizada para Empresas */}
-          <div className="space-y-2">
-            {empresasData.map((entry, index) => {
-              const percentage = ((entry.value / empresasTotal) * 100).toFixed(1);
-              return (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: entry.color }}
-                    ></div>
-                    <span className="text-gray-700">{entry.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-gray-800">{entry.value.toLocaleString()}</span>
-                    <span className="text-gray-500 ml-1">({percentage}%)</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
-      
-      {/* Resumen comparativo */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h4 className="text-lg font-semibold text-gray-800 mb-4">📊 Resumen Comparativo</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 rounded-lg p-4 text-center">
-            <h5 className="font-semibold text-blue-800">Total Personas</h5>
-            <p className="text-2xl font-bold text-blue-600">{personasTotal.toLocaleString()}</p>
+
+      {/* Distribución Empresas */}
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+          <span className="mr-2">🏢</span>
+          Distribución - Empresas
+        </h3>
+        {empresasData.length > 0 ? (
+          <div className="w-full h-80 sm:h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 30, right: 30, bottom: 50, left: 30 }}>
+                <Pie
+                  data={empresasData}
+                  cx="50%"
+                  cy="45%"
+                  labelLine={false}
+                  label={(entry) => renderCustomLabel(entry, empresasTotal)}
+                  outerRadius="60%"
+                  innerRadius="25%"
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {empresasData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-          <div className="bg-orange-50 rounded-lg p-4 text-center">
-            <h5 className="font-semibold text-orange-800">Total Empresas</h5>
-            <p className="text-2xl font-bold text-orange-600">{empresasTotal.toLocaleString()}</p>
+        ) : (
+          <div className="flex items-center justify-center h-64 text-slate-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🏢</div>
+              <div className="text-lg font-medium mb-1">Sin datos disponibles</div>
+              <div className="text-sm text-gray-400">No hay información para empresas</div>
+            </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <h5 className="font-semibold text-gray-800">Total General</h5>
-            <p className="text-2xl font-bold text-gray-600">{(personasTotal + empresasTotal).toLocaleString()}</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

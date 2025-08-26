@@ -402,32 +402,58 @@ const SuggestionsAnalysis: React.FC = () => {
         {/* Pie Chart - Categories */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Distribución de Categorías</h2>
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Gráfica Circular */}
-            <div className="flex justify-center">
-              <div className="w-80 h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={preparePieData()}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={120}
-                      innerRadius={40}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({name, value}) => `${value}%`}
-                      labelLine={false}
-                    >
-                      {preparePieData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomPieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+          {preparePieData().length === 0 ? (
+            <div className="flex items-center justify-center h-80 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <div className="text-6xl text-gray-300 mb-4">📊</div>
+                <p className="text-gray-500 text-lg font-medium">No hay datos disponibles</p>
+                <p className="text-gray-400 text-sm mt-2">Verifica que el archivo de datos esté cargado correctamente</p>
               </div>
             </div>
+          ) : (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Gráfica Circular */}
+              <div className="flex justify-center">
+                <div className="w-full h-80 sm:h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
+                      <Pie
+                        data={preparePieData()}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius="65%"
+                        innerRadius="25%"
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({name, value}) => `${value}%`}
+                        labelLine={false}
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      >
+                        {preparePieData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        content={<CustomPieTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                          fontSize: '14px',
+                          padding: '12px 16px',
+                          backdropFilter: 'blur(8px)',
+                          zIndex: 1000
+                        }}
+                        wrapperStyle={{ zIndex: 1000 }}
+                        position={{ x: 0, y: 0 }}
+                        allowEscapeViewBox={{ x: false, y: false }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             
             {/* Leyenda y Estadísticas */}
             <div className="space-y-4">
@@ -464,6 +490,7 @@ const SuggestionsAnalysis: React.FC = () => {
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Interactive Table Chart */}

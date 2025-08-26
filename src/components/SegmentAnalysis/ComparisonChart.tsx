@@ -120,25 +120,41 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
       {/* Gráfico de barras comparativo */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Métricas por Segmento</h3>
-        <div className="h-80">
+        <div className="h-96 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={comparisonData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 40, left: 30, bottom: 100 }}
               barCategoryGap="20%"
+              barGap={8}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.7} />
               <XAxis 
                 dataKey="metric" 
-                tick={{ fontSize: 12 }}
+                tick={{ 
+                  fontSize: 11, 
+                  fill: '#4A5568',
+                  textAnchor: 'end'
+                }}
                 angle={-45}
                 textAnchor="end"
-                height={80}
+                height={90}
+                interval={0}
+                axisLine={{ stroke: '#CBD5E0' }}
+                tickLine={{ stroke: '#CBD5E0' }}
               />
               <YAxis 
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: '#4A5568' }}
                 domain={[0, 10]}
-                label={{ value: 'Puntuación', angle: -90, position: 'insideLeft' }}
+                tickCount={6}
+                axisLine={{ stroke: '#CBD5E0' }}
+                tickLine={{ stroke: '#CBD5E0' }}
+                label={{ 
+                  value: 'Puntuación (0-10)', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontSize: '12px', fill: '#4A5568' }
+                }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
@@ -150,14 +166,14 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
                 name="👥 Personas"
                 fill="#3B82F6"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={60}
+                maxBarSize={50}
               />
               <Bar 
                 dataKey="empresas" 
                 name="🏢 Empresas"
                 fill="#F97316"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={60}
+                maxBarSize={50}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -166,31 +182,36 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
 
       {/* Insights principales */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">🔍 Principales Diferencias</h3>
-        <div className="space-y-3">
-          {topDifferences.map((item, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <span className="text-2xl">{getInsightIcon(item.difference)}</span>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-700">
-                    {getInsightText(item.metric, item.difference, item.personas, item.empresas)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className={`text-sm font-bold ${
-                    Math.abs(item.difference) < 0.5 
-                      ? 'text-gray-600' 
-                      : item.difference > 0 
-                        ? 'text-blue-600' 
-                        : 'text-orange-600'
-                  }`}>
-                    {item.difference > 0 ? '+' : ''}{item.difference.toFixed(1)}
-                  </span>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+          <span className="mr-2">💡</span>
+          Insights Clave
+        </h3>
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg border border-blue-200">
+          <div className="grid gap-3">
+            {topDifferences.map((item, index) => (
+              <div key={index} className="bg-white rounded-lg p-4 border-l-4 border-blue-400 shadow-sm">
+                <div className="flex items-start space-x-3">
+                  <span className="text-2xl">{getInsightIcon(item.difference)}</span>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">
+                      {getInsightText(item.metric, item.difference, item.personas, item.empresas)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-sm font-bold ${
+                      Math.abs(item.difference) < 0.5 
+                        ? 'text-gray-600' 
+                        : item.difference > 0 
+                          ? 'text-blue-600' 
+                          : 'text-orange-600'
+                    }`}>
+                      {item.difference > 0 ? '+' : ''}{item.difference.toFixed(1)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

@@ -248,9 +248,9 @@ export class SatisfactionDataService {
           ratingDistribution: personasRatingDistribution
         });
 
-        // Agregar registro para segmento Empresas
+        // Agregar registro para segmento Empresarial
         result.push({
-          segment: 'Empresas',
+          segment: 'Empresarial',
           metric: metric.name,
           averageRating: empresarialStats.average,
           totalResponses: empresarialStats.total,
@@ -268,7 +268,7 @@ export class SatisfactionDataService {
           ratingDistribution: {}
         });
         result.push({
-          segment: 'Empresas',
+          segment: 'Empresarial',
           metric: metric.name,
           averageRating: 0,
           totalResponses: 0,

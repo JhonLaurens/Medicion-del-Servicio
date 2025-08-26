@@ -400,17 +400,17 @@ const GeographicAnalysis: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Desglose por Métrica vs. Promedio Nacional</h3>
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg">
-                  <div className="h-96">
+                  <div className="h-96 sm:h-[28rem]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={prepareChartData(selectedCityData)}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                        margin={{ top: 20, right: 30, left: 40, bottom: 80 }}
                         barCategoryGap="20%"
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.7} />
                         <XAxis 
                           dataKey="metric" 
-                          tick={{ fontSize: 12, fill: '#374151' }}
+                          tick={{ fontSize: 11, fill: '#374151' }}
                           angle={-45}
                           textAnchor="end"
                           height={80}
