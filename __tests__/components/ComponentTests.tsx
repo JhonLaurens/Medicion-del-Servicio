@@ -1,6 +1,6 @@
 import React from 'react';
-import { satisfactionDataService } from '../services/dataService';
-import { KPIData, SatisfactionRecord } from '../types';
+import { satisfactionDataService } from '@/services/dataService';
+import { KPIData, SatisfactionRecord } from '@/types';
 
 // Datos de prueba simulados
 const mockSatisfactionData: SatisfactionRecord[] = [

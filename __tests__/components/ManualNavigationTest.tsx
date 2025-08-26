@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { satisfactionDataService } from '../services/dataService';
+import { satisfactionDataService } from '../../src/services/dataService';
 
 interface NavigationIssue {
   section: string;

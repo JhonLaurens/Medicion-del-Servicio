@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import OptimizedImage from './OptimizedImage';
+import OptimizedImage from '../components/OptimizedImage';
 
 interface HomePageProps {
   onNavigate?: (page: string) => void;

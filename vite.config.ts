@@ -26,7 +26,10 @@ export default defineConfig(({ mode }) => {
             manualChunks: {
               vendor: ['react', 'react-dom'],
               charts: ['recharts'],
-              utils: ['papaparse', 'lucide-react']
+              utils: ['papaparse', 'lucide-react'],
+              dashboard: ['./src/features/dashboard'],
+              analytics: ['./src/features/analytics'],
+              reports: ['./src/features/reports']
             }
           }
         },
@@ -35,30 +38,39 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, './src'),
+          '@components': path.resolve(__dirname, './src/components'),
+          '@pages': path.resolve(__dirname, './src/pages'),
+          '@features': path.resolve(__dirname, './src/features'),
+          '@services': path.resolve(__dirname, './src/services'),
+          '@types': path.resolve(__dirname, './src/types'),
+          '@utils': path.resolve(__dirname, './src/utils'),
+          '@hooks': path.resolve(__dirname, './src/hooks'),
+          '@assets': path.resolve(__dirname, './src/assets')
         }
       },
       test: {
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['./src/test/setup.ts'],
+        setupFiles: ['./__tests__/setup.ts'],
         css: true,
         coverage: {
           provider: 'v8',
           reporter: ['text', 'json', 'html'],
           exclude: [
             'node_modules/',
-            'src/test/',
+            '__tests__/',
+            'scripts/',
+            'docs/',
             '**/*.d.ts',
             '**/*.config.*',
-            'dist/',
-            'respaldo-limpieza/'
+            'dist/'
           ],
           thresholds: {
             global: {
-              branches: 80,
-              functions: 80,
-              lines: 80,
-              statements: 80
+              branches: 85,
+              functions: 85,
+              lines: 85,
+              statements: 85
             }
           }
         }

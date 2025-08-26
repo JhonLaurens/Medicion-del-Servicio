@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useImagePreloader } from '../hooks/useImageLoader';
+import { useImagePreloader } from '../../hooks/useImageLoader';
 
 interface GlobalPreloaderProps {
   onComplete?: () => void;

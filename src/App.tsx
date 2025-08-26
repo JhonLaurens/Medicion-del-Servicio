@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import NavigationSidebar from './components/NavigationSidebar';
-import HomePage from './components/HomePage';
-import TechnicalSpecsPage from './components/TechnicalSpecsPage';
-import SegmentAnalysis from './components/SegmentAnalysis';
-import GeographicAnalysis from './components/GeographicAnalysis';
-import SuggestionsAnalysis from './components/SuggestionsAnalysis';
-import DataExplorer from './components/DataExplorer';
-// import TestComponent from './components/TestComponent'; // Removido para producción
-import ManagerParticipationReport from './components/ManagerParticipationReport';
-import MetricsOverview from './components/MetricsOverview';
-import ComponentTests from './test/ComponentTests';
+// Layout components
+import { Header, Footer, NavigationSidebar } from './components/layout';
+// Pages
+import { HomePage, TechnicalSpecsPage } from './pages';
+// Features
+import { SegmentAnalysis, GeographicAnalysis, SuggestionsAnalysis } from './features/analytics';
+import { DataExplorer, ManagerParticipationReport } from './features/reports';
+import { MetricsOverview } from './features/dashboard';
+// Common components
+import { ErrorBoundary } from './components/common';
+// Test components (moved to __tests__)
+import ComponentTests from '../__tests__/components/ComponentTests';
+import ManualNavigationTest from '../__tests__/components/ManualNavigationTest';
+import ManualTestSuite from '../__tests__/components/ManualTestSuite';
+import EnvironmentCompatibilityTest from '../__tests__/components/EnvironmentCompatibilityTest';
+// Remaining components that need to be moved
 import DiagnosticComponent from './components/DiagnosticComponent';
 import DataLoadingDiagnostic from './components/DataLoadingDiagnostic';
 import NavigationAudit from './components/NavigationAudit';
-import ManualNavigationTest from './test/ManualNavigationTest';
-import ManualTestSuite from './test/ManualTestSuite';
-import EnvironmentCompatibilityTest from './test/EnvironmentCompatibilityTest';
+// Services
 import { satisfactionDataService } from './services/dataService';
-import ErrorBoundary from './components/ErrorBoundary';
 
 type PageType = 'inicio' | 'ficha-tecnica' | 'dashboard-general' | 'analisis-segmento' | 
                 'analisis-geografico' | 'analisis-sugerencias' | 'explorador-datos' | 

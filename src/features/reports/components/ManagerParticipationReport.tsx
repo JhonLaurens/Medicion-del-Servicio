@@ -12,12 +12,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { SatisfactionDataService } from "../services/dataService";
-import {
-  ExecutiveAnalysisService,
-  ExecutiveToAnalyze,
-} from "../services/executiveAnalysisService";
-import { satisfactionDataService } from '../services/dataService';
+import { satisfactionDataService } from '../../../services/dataService';
+import ChartErrorBoundary from '../../../components/ChartErrorBoundary';
 
 interface ManagerData {
   name: string;
@@ -30,7 +26,7 @@ interface ManagerData {
   segmento?: string;
   ciudad?: string;
   tipoEjecutivo?: string;
-  executiveInfo?: ExecutiveToAnalyze;
+  csvInfo?: any;
 }
 
 interface FilterStats {
@@ -77,40 +73,34 @@ const ManagerParticipationReport: React.FC = () => {
     otherEmpresarialManagers: [],
   });
   const [agencyData, setAgencyData] = useState<AgencyInfo[]>([]);
-  const [executivesToAnalyze, setExecutivesToAnalyze] = useState<
-    ExecutiveToAnalyze[]
-  >([]);
-
-  // Usar la instancia singleton del dataService
-  const executiveService = new ExecutiveAnalysisService();
+  // Estado para almacenar todos los ejecutivos únicos del CSV
+  const [allExecutives, setAllExecutives] = useState<string[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         console.log("🚀 ManagerParticipationReport: Loading data...");
 
-        // Cargar ambos archivos en paralelo
-        await Promise.all([
-          satisfactionDataService.loadData(),
-          executiveService.loadExecutivesToAnalyze(),
-        ]);
+        // Cargar solo el archivo datos.csv
+        await satisfactionDataService.loadData();
 
         console.log(
-          "✅ ManagerParticipationReport: Both data sources loaded successfully"
+          "✅ ManagerParticipationReport: Data loaded successfully"
         );
 
-        // Obtener la lista de ejecutivos para analizar
-        const executives = executiveService.getExecutivesToAnalyze();
-        setExecutivesToAnalyze(executives);
+        // Obtener todos los ejecutivos únicos del CSV
+        const data = satisfactionDataService.getData();
+        const uniqueExecutives = [...new Set(data.map(record => record.EJECUTIVO_FINAL).filter(Boolean))];
+        setAllExecutives(uniqueExecutives);
 
         console.log(
-          "📋 Executives to analyze:",
-          executives.length,
+          "📋 Unique executives found:",
+          uniqueExecutives.length,
           "executives"
         );
-        console.log("📋 Sample executives:", executives.slice(0, 3));
+        console.log("📋 Sample executives:", uniqueExecutives.slice(0, 3));
 
-        // Process manager data with filtered executives
+        // Process manager data
         processManagerData();
       } catch (error) {
         console.error(
@@ -139,28 +129,24 @@ const ManagerParticipationReport: React.FC = () => {
 
   useEffect(() => {
     console.log(
-      "👥 executivesToAnalyze state changed:",
-      executivesToAnalyze.length,
+      "👥 allExecutives state changed:",
+      allExecutives.length,
       "executives"
     );
-  }, [executivesToAnalyze]);
+  }, [allExecutives]);
 
-  // Process data when both services are loaded
+  // Process data when service is loaded
   useEffect(() => {
     console.log("🔄 Checking if data processing should run...");
     console.log("🔍 satisfactionDataService.isDataLoaded():", satisfactionDataService.isDataLoaded());
-    console.log(
-      "🔍 executiveService.isDataLoaded():",
-      executiveService.isDataLoaded()
-    );
 
-    if (satisfactionDataService.isDataLoaded() && executiveService.isDataLoaded()) {
-      console.log("✅ Both services loaded, calling processManagerData...");
+    if (satisfactionDataService.isDataLoaded()) {
+      console.log("✅ Data service loaded, calling processManagerData...");
       processManagerData();
     } else {
       console.log("⏳ Waiting for data to load...");
     }
-  }, [executivesToAnalyze]); // Trigger when executives are loaded
+  }, [allExecutives]); // Trigger when executives are loaded
 
   // ... existing code ...
 
@@ -175,28 +161,14 @@ const ManagerParticipationReport: React.FC = () => {
       return;
     }
 
-    if (!executiveService.isDataLoaded()) {
-      console.log("❌ ManagerParticipationReport: Executive analysis data not loaded yet");
-      return;
-    }
+    console.log("✅ Data service loaded, proceeding with processing...");
 
-    console.log("✅ Both data sources are loaded, proceeding with processing...");
-
-    // Obtener la lista de ejecutivos para analizar
-    const executivesToAnalyze = executiveService.getExecutivesToAnalyze();
-    console.log("📋 Executives to analyze:", executivesToAnalyze.map((e) => e.EJECUTIVO_FINAL));
-
-    // Filtrar registros que correspondan a los ejecutivos especificados
+    // Usar todos los registros del CSV (no filtrar por archivo externo)
     const filteredRecords = data.filter((record) => {
-      const ejecutivoName = record.EJECUTIVO_FINAL;
-      return executivesToAnalyze.some((executive) => {
-        const normalizedExecutiveName = executive.EJECUTIVO_FINAL.toLowerCase().trim();
-        const normalizedRecordName = ejecutivoName?.toLowerCase().trim() || "";
-        return normalizedExecutiveName === normalizedRecordName;
-      });
+      return record.EJECUTIVO_FINAL && record.EJECUTIVO_FINAL.trim() !== "";
     });
 
-    console.log("📊 Filtered records for specified executives:", filteredRecords.length);
+    console.log("📊 Records with valid executives:", filteredRecords.length);
 
     // ELIMINAR DUPLICADOS: Agrupar por EJECUTIVO_FINAL y tomar solo un registro por ejecutivo
     const uniqueExecutiveRecords = new Map();
@@ -216,20 +188,13 @@ const ManagerParticipationReport: React.FC = () => {
       const firstRecord = records[0]; // Usar el primer registro como referencia
       const totalSurveys = records.length; // Contar todas las encuestas de este ejecutivo
       
-      // Obtener información adicional del archivo de ejecutivos para analizar
-      const executiveInfo = executivesToAnalyze.find((executive) => {
-        const normalizedExecutiveName = executive.EJECUTIVO_FINAL.toLowerCase().trim();
-        const normalizedRecordName = managerName.toLowerCase().trim();
-        return normalizedExecutiveName === normalizedRecordName;
-      });
-
-      // Normalizar tipo de ejecutivo para consistencia
-      let tipoEjecutivo = executiveInfo?.TIPO_EJECUTIVO || firstRecord["TIPO EJECUTIVO"] || "Sin Tipo";
+      // Usar información directamente del CSV
+      let tipoEjecutivo = firstRecord["TIPO EJECUTIVO"] || "Sin Tipo";
       tipoEjecutivo = tipoEjecutivo.toUpperCase(); // Normalizar a mayúsculas
 
-      const agencia = executiveInfo?.AGENCIA || firstRecord.AGENCIA || "Sin Agencia";
-      const segmento = executiveInfo?.SEGMENTO || firstRecord.SEGMENTO || "Sin Segmento";
-      const ciudad = executiveInfo?.CIUDAD || firstRecord.CIUDAD || "Sin Ciudad";
+      const agencia = firstRecord.AGENCIA || "Sin Agencia";
+      const segmento = firstRecord.SEGMENTO || "Sin Segmento";
+      const ciudad = firstRecord.CIUDAD || "Sin Ciudad";
 
       // Determinar categoría
       let category = "general";
@@ -259,7 +224,7 @@ const ManagerParticipationReport: React.FC = () => {
         segmento: segmento,
         ciudad: ciudad,
         tipoEjecutivo: tipoEjecutivo,
-        executiveInfo: executiveInfo,
+        csvInfo: firstRecord,
       } as ManagerData;
     });
 
@@ -313,7 +278,7 @@ const ManagerParticipationReport: React.FC = () => {
     });
 
     // Calcular estadísticas por filtros usando TODOS los datos del CSV
-    const allData = dataService.getData();
+    const allData = satisfactionDataService.getData();
     if (allData && allData.length > 0) {
       calculateFilterStats(allData);
     }
@@ -569,17 +534,16 @@ const ManagerParticipationReport: React.FC = () => {
           📊 Reporte de Participación de Ejecutivos
         </h1>
         <p className="text-gray-600 text-lg leading-relaxed">
-          Este reporte presenta un análisis detallado de la participación de los
-          ejecutivos especificados en el archivo "ejecutivos para analizar.csv"
-          en las encuestas de satisfacción al cliente. Los datos incluyen el
-          número de encuestas realizadas, porcentaje de participación y tasas de
-          cobertura por cada ejecutivo, organizados por TIPO_EJECUTIVO,
-          SEGMENTO, CIUDAD y AGENCIA. Solo se incluyen los ejecutivos que están
-          listados en el archivo de análisis.
+          Este reporte presenta un análisis detallado de la participación de todos los
+          ejecutivos registrados en el archivo "datos.csv" en las encuestas de satisfacción
+          al cliente. Los datos incluyen el número de encuestas realizadas, porcentaje de
+          participación y tasas de cobertura por cada ejecutivo, organizados por
+          TIPO_EJECUTIVO, SEGMENTO, CIUDAD y AGENCIA. Se incluyen todos los ejecutivos
+          que tienen al menos una encuesta registrada.
           <br />
           <br />
-          <strong>Total de encuestas analizadas:</strong> {totalSurveys} |{" "}
-          <strong>Ejecutivos monitoreados:</strong> {totalManagers} |{" "}
+          <strong>Total de encuestas analizadas:</strong> {totalSurveys.toLocaleString()} |{" "}
+          <strong>Ejecutivos encontrados:</strong> {totalManagers} |{" "}
           <strong>Ejecutivos activos:</strong> {activeManagers}
         </p>
       </div>
@@ -781,64 +745,66 @@ const ManagerParticipationReport: React.FC = () => {
                   : "Agencia"}
               </h4>
               <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={filterStats.slice(0, 10)}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="filterValue"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      interval={0}
-                    />
-                    <YAxis domain={[0, 5]} />
-                    <Tooltip
-                      formatter={(value, name) => [
-                        typeof value === "number" ? value.toFixed(2) : value,
-                        name === "averageRating"
-                          ? "Promedio General"
-                          : name === "claridadPromedio"
-                          ? "Claridad"
-                          : name === "recomendacionPromedio"
-                          ? "Recomendación"
-                          : name === "satisfaccionPromedio"
-                          ? "Satisfacción"
-                          : name === "lealtadPromedio"
-                          ? "Lealtad"
-                          : name,
-                      ]}
-                    />
-                    <Legend />
-                    <Bar
-                      dataKey="averageRating"
-                      fill="#3B82F6"
-                      name="Promedio General"
-                    />
-                    <Bar
-                      dataKey="claridadPromedio"
-                      fill="#10B981"
-                      name="Claridad"
-                    />
-                    <Bar
-                      dataKey="recomendacionPromedio"
-                      fill="#F59E0B"
-                      name="Recomendación"
-                    />
-                    <Bar
-                      dataKey="satisfaccionPromedio"
-                      fill="#EF4444"
-                      name="Satisfacción"
-                    />
-                    <Bar
-                      dataKey="lealtadPromedio"
-                      fill="#8B5CF6"
-                      name="Lealtad"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={filterStats.slice(0, 10)}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="filterValue"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        interval={0}
+                      />
+                      <YAxis domain={[0, 5]} />
+                      <Tooltip
+                        formatter={(value, name) => [
+                          typeof value === "number" ? value.toFixed(2) : value,
+                          name === "averageRating"
+                            ? "Promedio General"
+                            : name === "claridadPromedio"
+                            ? "Claridad"
+                            : name === "recomendacionPromedio"
+                            ? "Recomendación"
+                            : name === "satisfaccionPromedio"
+                            ? "Satisfacción"
+                            : name === "lealtadPromedio"
+                            ? "Lealtad"
+                            : name,
+                        ]}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="averageRating"
+                        fill="#3B82F6"
+                        name="Promedio General"
+                      />
+                      <Bar
+                        dataKey="claridadPromedio"
+                        fill="#10B981"
+                        name="Claridad"
+                      />
+                      <Bar
+                        dataKey="recomendacionPromedio"
+                        fill="#F59E0B"
+                        name="Recomendación"
+                      />
+                      <Bar
+                        dataKey="satisfaccionPromedio"
+                        fill="#EF4444"
+                        name="Satisfacción"
+                      />
+                      <Bar
+                        dataKey="lealtadPromedio"
+                        fill="#8B5CF6"
+                        name="Lealtad"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartErrorBoundary>
               </div>
             </div>
           </div>
@@ -849,9 +815,9 @@ const ManagerParticipationReport: React.FC = () => {
             </h3>
             <div className="text-sm text-yellow-700 space-y-2">
               <p><strong>Tipo de filtro seleccionado:</strong> {selectedFilterType}</p>
-              <p><strong>Datos cargados:</strong> {dataService.isDataLoaded() ? 'Sí' : 'No'}</p>
+              <p><strong>Datos cargados:</strong> {satisfactionDataService.isDataLoaded() ? 'Sí' : 'No'}</p>
               <p><strong>Longitud de filterStats:</strong> {filterStats.length}</p>
-              <p><strong>Estado de carga:</strong> {dataService.isDataLoaded() && executiveService.isDataLoaded() ? 'Ambos servicios cargados' : 'Esperando carga de datos'}</p>
+              <p><strong>Estado de carga:</strong> {satisfactionDataService.isDataLoaded() ? 'Datos CSV cargados correctamente' : 'Esperando carga de datos'}</p>
             </div>
           </div>
         )}

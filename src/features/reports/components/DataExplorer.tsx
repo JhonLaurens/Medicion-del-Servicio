@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { satisfactionDataService } from '../services/dataService';
-import { SatisfactionRecord } from '../types';
+import { satisfactionDataService } from '../../../services/dataService';
+import { SatisfactionRecord } from '../../../types';
 
 const DataExplorer: React.FC = () => {
   const [data, setData] = useState<SatisfactionRecord[]>([]);

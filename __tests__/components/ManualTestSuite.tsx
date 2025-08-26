@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { satisfactionDataService } from '../services/dataService';
-import { useSegmentAnalysis } from '../hooks/useSegmentAnalysis';
-import { getImageCacheStats, clearImageCache } from '../hooks/useImageLoader';
+import { satisfactionDataService } from '../../src/services/dataService';
+import { useSegmentAnalysis } from '../../src/hooks/useSegmentAnalysis';
+import { getImageCacheStats, clearImageCache } from '../../src/hooks/useImageLoader';
 
 interface TestResult {
   testName: string;

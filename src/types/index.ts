@@ -19,28 +19,11 @@ export interface SatisfactionRecord {
 }
 
 export interface KPIData {
-  metric: string;
-  consolidado: {
-    average: number;
-    rating5: number;
-    rating4: number;
-    rating123: number;
-    total: number;
-  };
-  personas: {
-    average: number;
-    rating5: number;
-    rating4: number;
-    rating123: number;
-    total: number;
-  };
-  empresarial: {
-    average: number;
-    rating5: number;
-    rating4: number;
-    rating123: number;
-    total: number;
-  };
+  segment: string; // 'Personas' o 'Empresas'
+  metric: string; // Nombre de la métrica
+  averageRating: number; // Promedio de calificación
+  totalResponses: number; // Total de respuestas
+  ratingDistribution: { [key: number]: number }; // Distribución por rating (1-5)
 }
 
 export interface GeographicData {

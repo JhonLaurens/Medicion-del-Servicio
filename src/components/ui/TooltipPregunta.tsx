@@ -13,10 +13,7 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  const showTooltip = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+  const updatePosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
@@ -38,8 +35,15 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
       
       setPosition({ x, y });
     }
-    setIsVisible(true);
   }, []);
+
+  const showTooltip = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    updatePosition();
+    setIsVisible(true);
+  }, [updatePosition]);
 
   const hideTooltip = useCallback(() => {
     if (!isSticky) {
@@ -98,14 +102,16 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
   }, []);
 
   return (
-    <div className="relative inline-block">
+    <>
       <div 
         ref={triggerRef}
-        className="cursor-help"
+        className="relative inline-block"
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
       >
-        {children}
+        <div className="cursor-help">
+          {children}
+        </div>
       </div>
       
       {isVisible && (
@@ -201,12 +207,12 @@ const TooltipPregunta: React.FC<TooltipPreguntaProps> = ({ questionMapping, chil
           {/* Footer */}
           <div className="border-t border-gray-100 pt-2 mt-3">
             <p className="text-xs text-gray-400 text-center">
-              💡 Hover sobre el título para ver esta información
+              💡 Haz clic para mantener visible • ESC para cerrar
             </p>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

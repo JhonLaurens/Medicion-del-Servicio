@@ -1,27 +1,30 @@
-import React, { useEffect, useState, useMemo, useCallback, memo, lazy, Suspense } from 'react';
-import { satisfactionDataService } from '../services/dataService';
-import { KPIData } from '../types';
-import { SURVEY_INFO } from '../data/questionsMap';
+import React, { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import { satisfactionDataService } from '../../../services/dataService';
+import { KPIData } from '../../../types';
+import { SURVEY_INFO } from '../../../data/questionsMap';
 
-// Lazy loading para gráficos pesados
-const LazyBarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const LazyPieChart = lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
-const LazyResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const LazyBar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
-const LazyPie = lazy(() => import('recharts').then(module => ({ default: module.Pie })));
-const LazyCell = lazy(() => import('recharts').then(module => ({ default: module.Cell })));
-const LazyXAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
-const LazyYAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
-const LazyCartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
-const LazyTooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
-const LazyLegend = lazy(() => import('recharts').then(module => ({ default: module.Legend })));
+// Importaciones estáticas de recharts para evitar errores de Symbol.iterator
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
-// Importar componentes memoizados
-import { useSegmentAnalysis } from '../hooks/useSegmentAnalysis';
-import MetricsCards from './SegmentAnalysis/MetricsCards';
-import DistributionCharts from './SegmentAnalysis/DistributionCharts';
-import ComparisonChart from './SegmentAnalysis/ComparisonChart';
-import ExecutiveSummary from './SegmentAnalysis/ExecutiveSummary';
+// Importar componentes memoizados y error boundary
+import { useSegmentAnalysis } from '../../../hooks/useSegmentAnalysis';
+import ChartErrorBoundary from '../../../components/ChartErrorBoundary';
+import MetricsCards from '../../../components/SegmentAnalysis/MetricsCards';
+import DistributionCharts from '../../../components/SegmentAnalysis/DistributionCharts';
+import ComparisonChart from '../../../components/SegmentAnalysis/ComparisonChart';
+import ExecutiveSummary from '../../../components/SegmentAnalysis/ExecutiveSummary';
 
 const SegmentAnalysis: React.FC = memo(() => {
   const {
@@ -63,32 +66,40 @@ const SegmentAnalysis: React.FC = memo(() => {
         </div>
 
         {/* Resumen Ejecutivo */}
-        <ExecutiveSummary 
-          personasStats={overallStats.personasStats}
-          empresasStats={overallStats.empresasStats}
-          hasValidData={hasValidData} 
-        />
+        <ChartErrorBoundary componentName="Resumen Ejecutivo">
+          <ExecutiveSummary 
+            personasStats={overallStats.personasStats}
+            empresasStats={overallStats.empresasStats}
+            hasValidData={hasValidData} 
+          />
+        </ChartErrorBoundary>
 
         {/* Tarjetas de Métricas */}
-        <MetricsCards 
-          kpiData={kpiData} 
-          hasValidData={hasValidData} 
-        />
+        <ChartErrorBoundary componentName="Tarjetas de Métricas">
+          <MetricsCards 
+            kpiData={kpiData} 
+            hasValidData={hasValidData} 
+          />
+        </ChartErrorBoundary>
 
         {/* Gráficos de Distribución */}
-        <DistributionCharts 
-          personasData={distributionData.personasData}
-          empresasData={distributionData.empresasData}
-          personasTotal={distributionData.personasTotal}
-          empresasTotal={distributionData.empresasTotal}
-          hasValidData={hasValidData}
-        />
+        <ChartErrorBoundary componentName="Gráficos de Distribución">
+          <DistributionCharts 
+            personasData={distributionData.personasData}
+            empresasData={distributionData.empresasData}
+            personasTotal={distributionData.personasTotal}
+            empresasTotal={distributionData.empresasTotal}
+            hasValidData={hasValidData}
+          />
+        </ChartErrorBoundary>
 
         {/* Gráfico de Comparación */}
-        <ComparisonChart 
-          chartData={chartData} 
-          hasValidData={hasValidData} 
-        />
+        <ChartErrorBoundary componentName="Gráfico de Comparación">
+          <ComparisonChart 
+            chartData={chartData} 
+            hasValidData={hasValidData} 
+          />
+        </ChartErrorBoundary>
 
         {/* Información del Estudio */}
         <div className="bg-white rounded-lg shadow-lg p-6">

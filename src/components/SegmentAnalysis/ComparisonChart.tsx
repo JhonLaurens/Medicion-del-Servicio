@@ -1,14 +1,14 @@
-import React, { Suspense, lazy } from 'react';
-
-// Lazy loading para gráficos pesados
-const LazyBarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const LazyBar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
-const LazyXAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
-const LazyYAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
-const LazyCartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
-const LazyTooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
-const LazyLegend = lazy(() => import('recharts').then(module => ({ default: module.Legend })));
-const LazyResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+import React from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 interface ComparisonData {
   metric: string;
@@ -25,7 +25,21 @@ interface ComparisonChartProps {
 }
 
 const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasValidData }) => {
-  if (!hasValidData) {
+  // Validación robusta de datos
+  const isValidComparisonData = hasValidData && 
+    Array.isArray(comparisonData) && 
+    comparisonData.length > 0 &&
+    comparisonData.every(item => 
+      item && 
+      typeof item === 'object' && 
+      typeof item.metric === 'string' &&
+      typeof item.personas === 'number' &&
+      typeof item.empresas === 'number' &&
+      !isNaN(item.personas) &&
+      !isNaN(item.empresas)
+    );
+
+  if (!isValidComparisonData) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">⚖️ Comparación entre Segmentos</h2>
@@ -73,8 +87,10 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
     return null;
   };
 
-  // Encontrar las métricas con mayor diferencia
-  const sortedByDifference = [...comparisonData].sort((a, b) => Math.abs(b.difference) - Math.abs(a.difference));
+  // Encontrar las métricas con mayor diferencia (con validación adicional)
+  const sortedByDifference = Array.isArray(comparisonData) && comparisonData.length > 0
+    ? [...comparisonData].sort((a, b) => Math.abs(b.difference) - Math.abs(a.difference))
+    : [];
   const topDifferences = sortedByDifference.slice(0, 3);
 
   const getInsightIcon = (difference: number) => {
@@ -105,52 +121,46 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Métricas por Segmento</h3>
         <div className="h-80">
-          <Suspense fallback={
-            <div className="h-80 bg-gray-100 rounded flex items-center justify-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <LazyResponsiveContainer width="100%" height="100%">
-              <LazyBarChart
-                data={comparisonData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                barCategoryGap="20%"
-              >
-                <LazyCartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <LazyXAxis 
-                  dataKey="metric" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <LazyYAxis 
-                  tick={{ fontSize: 12 }}
-                  domain={[0, 10]}
-                  label={{ value: 'Puntuación', angle: -90, position: 'insideLeft' }}
-                />
-                <LazyTooltip content={<CustomTooltip />} />
-                <LazyLegend 
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="rect"
-                />
-                <LazyBar 
-                  dataKey="personas" 
-                  name="👥 Personas"
-                  fill="#3B82F6"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={60}
-                />
-                <LazyBar 
-                  dataKey="empresas" 
-                  name="🏢 Empresas"
-                  fill="#F97316"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={60}
-                />
-              </LazyBarChart>
-            </LazyResponsiveContainer>
-          </Suspense>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={comparisonData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              barCategoryGap="20%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="metric" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                domain={[0, 10]}
+                label={{ value: 'Puntuación', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="rect"
+              />
+              <Bar 
+                dataKey="personas" 
+                name="👥 Personas"
+                fill="#3B82F6"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={60}
+              />
+              <Bar 
+                dataKey="empresas" 
+                name="🏢 Empresas"
+                fill="#F97316"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={60}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -189,25 +199,37 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
         <div className="bg-blue-50 rounded-lg p-4 text-center">
           <h4 className="font-semibold text-blue-800 text-sm">Promedio Personas</h4>
           <p className="text-xl font-bold text-blue-600">
-            {(comparisonData.reduce((sum, item) => sum + item.personas, 0) / comparisonData.length).toFixed(1)}
+            {Array.isArray(comparisonData) && comparisonData.length > 0
+              ? (comparisonData.reduce((sum, item) => sum + (item?.personas || 0), 0) / comparisonData.length).toFixed(1)
+              : '0.0'
+            }
           </p>
         </div>
         <div className="bg-orange-50 rounded-lg p-4 text-center">
           <h4 className="font-semibold text-orange-800 text-sm">Promedio Empresas</h4>
           <p className="text-xl font-bold text-orange-600">
-            {(comparisonData.reduce((sum, item) => sum + item.empresas, 0) / comparisonData.length).toFixed(1)}
+            {Array.isArray(comparisonData) && comparisonData.length > 0
+              ? (comparisonData.reduce((sum, item) => sum + (item?.empresas || 0), 0) / comparisonData.length).toFixed(1)
+              : '0.0'
+            }
           </p>
         </div>
         <div className="bg-green-50 rounded-lg p-4 text-center">
           <h4 className="font-semibold text-green-800 text-sm">Mayor Diferencia</h4>
           <p className="text-xl font-bold text-green-600">
-            {Math.max(...comparisonData.map(item => Math.abs(item.difference))).toFixed(1)}
+            {Array.isArray(comparisonData) && comparisonData.length > 0
+              ? Math.max(...comparisonData.map(item => Math.abs(item?.difference || 0))).toFixed(1)
+              : '0.0'
+            }
           </p>
         </div>
         <div className="bg-purple-50 rounded-lg p-4 text-center">
           <h4 className="font-semibold text-purple-800 text-sm">Diferencia Promedio</h4>
           <p className="text-xl font-bold text-purple-600">
-            {(comparisonData.reduce((sum, item) => sum + Math.abs(item.difference), 0) / comparisonData.length).toFixed(1)}
+            {Array.isArray(comparisonData) && comparisonData.length > 0
+              ? (comparisonData.reduce((sum, item) => sum + Math.abs(item?.difference || 0), 0) / comparisonData.length).toFixed(1)
+              : '0.0'
+            }
           </p>
         </div>
       </div>
@@ -234,30 +256,36 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {comparisonData.map((item, index) => (
+              {Array.isArray(comparisonData) && comparisonData.length > 0 ? comparisonData.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {item.metric}
+                    {item?.metric || 'N/A'}
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-blue-600 font-semibold">
-                    {item.personas.toFixed(1)}
+                    {(item?.personas || 0).toFixed(1)}
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-orange-600 font-semibold">
-                    {item.empresas.toFixed(1)}
+                    {(item?.empresas || 0).toFixed(1)}
                   </td>
                   <td className="px-4 py-3 text-sm text-center font-semibold">
                     <span className={`${
-                      Math.abs(item.difference) < 0.5 
+                      Math.abs(item?.difference || 0) < 0.5 
                         ? 'text-gray-600' 
-                        : item.difference > 0 
+                        : (item?.difference || 0) > 0 
                           ? 'text-blue-600' 
                           : 'text-orange-600'
                     }`}>
-                      {item.difference > 0 ? '+' : ''}{item.difference.toFixed(1)}
+                      {(item?.difference || 0) > 0 ? '+' : ''}{(item?.difference || 0).toFixed(1)}
                     </span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                    No hay datos disponibles para mostrar
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import ScoreCard from './ScoreCard';
-import RatingDistributionChart from './RatingDistributionChart';
-import SatisfactionTrendChart from './SatisfactionTrendChart';
-import DepartmentPerformanceChart from './DepartmentPerformanceChart';
-import { StarIcon, TrendUpIcon, UsersIcon, BuildingOfficeIcon } from './icons';
-import { satisfactionDataService } from '../services/dataService';
-import { ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData, NPSData } from '../types';
+import ScoreCard from '../../../components/ui/ScoreCard';
+import RatingDistributionChart from '../../../components/RatingDistributionChart';
+import SatisfactionTrendChart from '../../../components/SatisfactionTrendChart';
+import DepartmentPerformanceChart from '../../../components/DepartmentPerformanceChart';
+import { StarIcon, TrendUpIcon, UsersIcon, BuildingOfficeIcon } from '../../../components/icons';
+import { satisfactionDataService } from '../../../services/dataService';
+import { ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData, NPSData } from '../../../types';
 
 const Dashboard: React.FC = () => {
   const [overallRating, setOverallRating] = useState<number>(0);

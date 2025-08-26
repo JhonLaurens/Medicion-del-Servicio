@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { satisfactionDataService } from '../services/dataService';
-import { SuggestionData, EnhancedSuggestionData, CategoryInsight } from '../types';
+import { satisfactionDataService } from '../../../services/dataService';
+import { SuggestionData, EnhancedSuggestionData, CategoryInsight } from '../../../types';
 
 const SuggestionsAnalysis: React.FC = () => {
   const [suggestionData, setSuggestionData] = useState<SuggestionData[]>([]);

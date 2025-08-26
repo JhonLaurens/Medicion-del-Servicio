@@ -1,12 +1,12 @@
-import React, { Suspense, lazy } from 'react';
-
-// Lazy loading para gráficos pesados
-const LazyPieChart = lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
-const LazyPie = lazy(() => import('recharts').then(module => ({ default: module.Pie })));
-const LazyCell = lazy(() => import('recharts').then(module => ({ default: module.Cell })));
-const LazyResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const LazyTooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
-const LazyLegend = lazy(() => import('recharts').then(module => ({ default: module.Legend })));
+import React from 'react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend
+} from 'recharts';
 
 interface DistributionChartsProps {
   personasData: Array<{ name: string; value: number; color: string }>;
@@ -81,31 +81,25 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
           
           <div className="flex justify-center mb-4">
             <div className="w-80 h-80">
-              <Suspense fallback={
-                <div className="w-80 h-80 bg-gray-100 rounded-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-                </div>
-              }>
-                <LazyResponsiveContainer width="100%" height="100%">
-                  <LazyPieChart>
-                    <LazyPie
-                      data={personasData.map(item => ({ ...item, total: personasTotal }))}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => renderCustomLabel(entry, personasTotal)}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {personasData.map((entry, index) => (
-                        <LazyCell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </LazyPie>
-                    <LazyTooltip content={<CustomTooltip />} />
-                  </LazyPieChart>
-                </LazyResponsiveContainer>
-              </Suspense>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={personasData.map(item => ({ ...item, total: personasTotal }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(entry) => renderCustomLabel(entry, personasTotal)}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {personasData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
           
@@ -143,31 +137,25 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
           
           <div className="flex justify-center mb-4">
             <div className="w-80 h-80">
-              <Suspense fallback={
-                <div className="w-80 h-80 bg-gray-100 rounded-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600"></div>
-                </div>
-              }>
-                <LazyResponsiveContainer width="100%" height="100%">
-                  <LazyPieChart>
-                    <LazyPie
-                      data={empresasData.map(item => ({ ...item, total: empresasTotal }))}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => renderCustomLabel(entry, empresasTotal)}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {empresasData.map((entry, index) => (
-                        <LazyCell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </LazyPie>
-                    <LazyTooltip content={<CustomTooltip />} />
-                  </LazyPieChart>
-                </LazyResponsiveContainer>
-              </Suspense>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={empresasData.map(item => ({ ...item, total: empresasTotal }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(entry) => renderCustomLabel(entry, empresasTotal)}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {empresasData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
           

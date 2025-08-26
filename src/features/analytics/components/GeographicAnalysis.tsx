@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { satisfactionDataService } from '../services/dataService';
-import { GeographicData } from '../types';
+import { satisfactionDataService } from '../../../services/dataService';
+import { GeographicData } from '../../../types';
 
 const GeographicAnalysis: React.FC = () => {
   const [cityData, setCityData] = useState<GeographicData[]>([]);

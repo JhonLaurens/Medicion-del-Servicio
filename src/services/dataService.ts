@@ -192,7 +192,9 @@ export class SatisfactionDataService {
     this.log('📊 getKPIData: Processing metrics:', metrics.map(m => m.name));
     this.log('📊 getKPIData: Total data records:', this.data.length);
 
-    const result = metrics.map(metric => {
+    const result: KPIData[] = [];
+
+    metrics.forEach(metric => {
       try {
         // Incluir todos los registros, convirtiendo valores vacíos/nulos a 0
         const allData = this.data.map(d => {
@@ -209,43 +211,81 @@ export class SatisfactionDataService {
           metric: metric.key
         });
 
-        const consolidado = this.calculateStats(allData, metric.key);
-        const personas = this.calculateStats(
-          allData.filter(d => d.SEGMENTO === 'PERSONAS'), 
-          metric.key
-        );
-        const empresarial = this.calculateStats(
-          allData.filter(d => d.SEGMENTO === 'EMPRESARIAL'), 
-          metric.key
-        );
+        // Calcular estadísticas por segmento
+        const personasData = allData.filter(d => d.SEGMENTO === 'PERSONAS');
+        const empresarialData = allData.filter(d => d.SEGMENTO === 'EMPRESARIAL');
 
-        return {
+        const personasStats = this.calculateStats(personasData, metric.key);
+        const empresarialStats = this.calculateStats(empresarialData, metric.key);
+
+        console.log(`📊 ${metric.name} - Personas: ${personasData.length} registros, promedio: ${personasStats.average}`);
+        console.log(`📊 ${metric.name} - Empresarial: ${empresarialData.length} registros, promedio: ${empresarialStats.average}`);
+
+        // Crear distribución de ratings para Personas
+        const personasRatingDistribution: { [key: number]: number } = {};
+        personasData.forEach(record => {
+          const rating = record[metric.key as keyof SatisfactionRecord] as number;
+          if (rating >= 1 && rating <= 5) {
+            personasRatingDistribution[rating] = (personasRatingDistribution[rating] || 0) + 1;
+          }
+        });
+
+        // Crear distribución de ratings para Empresarial
+        const empresarialRatingDistribution: { [key: number]: number } = {};
+        empresarialData.forEach(record => {
+          const rating = record[metric.key as keyof SatisfactionRecord] as number;
+          if (rating >= 1 && rating <= 5) {
+            empresarialRatingDistribution[rating] = (empresarialRatingDistribution[rating] || 0) + 1;
+          }
+        });
+
+        // Agregar registro para segmento Personas
+        result.push({
+          segment: 'Personas',
           metric: metric.name,
-          consolidado,
-          personas,
-          empresarial
-        };
+          averageRating: personasStats.average,
+          totalResponses: personasStats.total,
+          ratingDistribution: personasRatingDistribution
+        });
+
+        // Agregar registro para segmento Empresas
+        result.push({
+          segment: 'Empresas',
+          metric: metric.name,
+          averageRating: empresarialStats.average,
+          totalResponses: empresarialStats.total,
+          ratingDistribution: empresarialRatingDistribution
+        });
+
       } catch (error) {
         this.logError(`❌ Error processing metric ${metric.name}:`, error);
-        return {
+        // Agregar registros vacíos en caso de error
+        result.push({
+          segment: 'Personas',
           metric: metric.name,
-          consolidado: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 },
-          personas: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 },
-          empresarial: { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 }
-        };
+          averageRating: 0,
+          totalResponses: 0,
+          ratingDistribution: {}
+        });
+        result.push({
+          segment: 'Empresas',
+          metric: metric.name,
+          averageRating: 0,
+          totalResponses: 0,
+          ratingDistribution: {}
+        });
       }
     });
 
-    console.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
-    console.log('📊 getKPIData: RESULTADO FINAL:', result.length, 'métricas generadas');
-    console.log('📊 getKPIData: MÉTRICAS DETALLADAS:', result.map(r => ({
+    console.log('📊 getKPIData: Generated KPI results:', result.length, 'registros');
+    console.log('📊 getKPIData: RESULTADO FINAL por segmento:', result.map(r => ({
+      segment: r.segment,
       metric: r.metric,
-      consolidado: r.consolidado.average,
-      personas: r.personas.average,
-      empresarial: r.empresarial.average
+      average: r.averageRating,
+      responses: r.totalResponses
     })));
     
-    this.log('📊 getKPIData: Generated KPI results:', result.map(r => r.metric));
+    this.log('📊 getKPIData: Generated KPI results:', result.length, 'registros');
     return result;
   }
 

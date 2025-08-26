@@ -60,7 +60,60 @@ export const useSegmentAnalysis = () => {
   }, [kpiData]);
 
   const overallStats = useMemo((): OverallStats => {
-    if (!hasValidData) {
+    if (!hasValidData || !Array.isArray(kpiData) || kpiData.length === 0) {
+      return {
+        totalResponses: 0,
+        personasResponses: 0,
+        empresasResponses: 0,
+        personasAverage: 0,
+        empresasAverage: 0,
+        difference: 0,
+        personasStats: {
+          satisfaction: 0,
+          clarity: 0,
+          recommendation: 0,
+          loyalty: 0,
+          totalResponses: 0
+        },
+        empresasStats: {
+          satisfaction: 0,
+          clarity: 0,
+          recommendation: 0,
+          loyalty: 0,
+          totalResponses: 0
+        }
+      };
+    }
+
+    // Validación adicional para prevenir errores de Symbol.iterator
+    try {
+      if (!kpiData[Symbol.iterator]) {
+        console.warn('kpiData no es iterable, usando array vacío');
+        return {
+          totalResponses: 0,
+          personasResponses: 0,
+          empresasResponses: 0,
+          personasAverage: 0,
+          empresasAverage: 0,
+          difference: 0,
+          personasStats: {
+            satisfaction: 0,
+            clarity: 0,
+            recommendation: 0,
+            loyalty: 0,
+            totalResponses: 0
+          },
+          empresasStats: {
+            satisfaction: 0,
+            clarity: 0,
+            recommendation: 0,
+            loyalty: 0,
+            totalResponses: 0
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error verificando Symbol.iterator:', error);
       return {
         totalResponses: 0,
         personasResponses: 0,
@@ -93,8 +146,8 @@ export const useSegmentAnalysis = () => {
       const metricData = data.filter(item => 
         item.metric === metricName || 
         item.metric === 'Satisfacción General' && metricName === 'satisfaction' ||
-        item.metric === 'Claridad' && metricName === 'clarity' ||
-        item.metric === 'Recomendación' && metricName === 'recommendation' ||
+        item.metric === 'Claridad de Información' && metricName === 'clarity' ||
+        item.metric === 'Recomendación (NPS)' && metricName === 'recommendation' ||
         item.metric === 'Lealtad' && metricName === 'loyalty'
       );
       return metricData.length > 0 
@@ -141,7 +194,28 @@ export const useSegmentAnalysis = () => {
   }, [kpiData, hasValidData]);
 
   const distributionData = useMemo((): DistributionData => {
-    if (!hasValidData) {
+    if (!hasValidData || !Array.isArray(kpiData) || kpiData.length === 0) {
+      return {
+        personasData: [],
+        empresasData: [],
+        personasTotal: 0,
+        empresasTotal: 0
+      };
+    }
+
+    // Validación adicional para prevenir errores de Symbol.iterator
+    try {
+      if (!kpiData[Symbol.iterator]) {
+        console.warn('kpiData no es iterable en distributionData');
+        return {
+          personasData: [],
+          empresasData: [],
+          personasTotal: 0,
+          empresasTotal: 0
+        };
+      }
+    } catch (error) {
+      console.error('Error verificando Symbol.iterator en distributionData:', error);
       return {
         personasData: [],
         empresasData: [],
@@ -189,9 +263,20 @@ export const useSegmentAnalysis = () => {
   }, [kpiData, hasValidData]);
 
   const chartData = useMemo((): ChartDataPoint[] => {
-    if (!hasValidData) return [];
+    if (!hasValidData || !Array.isArray(kpiData) || kpiData.length === 0) return [];
 
-    const metrics = ['Satisfacción General', 'Claridad', 'Recomendación', 'Lealtad'];
+    // Validación adicional para prevenir errores de Symbol.iterator
+    try {
+      if (!kpiData[Symbol.iterator]) {
+        console.warn('kpiData no es iterable en chartData');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error verificando Symbol.iterator en chartData:', error);
+      return [];
+    }
+
+    const metrics = ['Satisfacción General', 'Claridad de Información', 'Recomendación (NPS)', 'Lealtad'];
     
     return metrics.map(metric => {
       const personasItems = kpiData.filter(item => item.segment === 'Personas' && item.metric === metric);
