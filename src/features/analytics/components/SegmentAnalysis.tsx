@@ -96,7 +96,7 @@ const SegmentAnalysis: React.FC = memo(() => {
         {/* Gráfico de Comparación */}
         <ChartErrorBoundary componentName="Gráfico de Comparación">
           <ComparisonChart 
-            chartData={chartData} 
+            comparisonData={chartData} 
             hasValidData={hasValidData} 
           />
         </ChartErrorBoundary>

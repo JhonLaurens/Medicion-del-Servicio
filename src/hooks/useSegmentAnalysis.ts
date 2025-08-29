@@ -32,6 +32,9 @@ interface ChartDataPoint {
   metric: string;
   personas: number;
   empresas: number;
+  difference: number;
+  personasColor: string;
+  empresasColor: string;
 }
 
 export const useSegmentAnalysis = () => {
@@ -143,13 +146,16 @@ export const useSegmentAnalysis = () => {
 
     // Función para calcular estadísticas por métrica
     const calculateMetricStats = (data: KPIData[], metricName: string): number => {
-      const metricData = data.filter(item => 
-        item.metric === metricName || 
-        item.metric === 'Satisfacción General' && metricName === 'satisfaction' ||
-        item.metric === 'Claridad de Información' && metricName === 'clarity' ||
-        item.metric === 'Recomendación (NPS)' && metricName === 'recommendation' ||
-        item.metric === 'Lealtad' && metricName === 'loyalty'
-      );
+      const metricMap: { [key: string]: string } = {
+        'satisfaction': 'Satisfacción General',
+        'clarity': 'Claridad de Información',
+        'recommendation': 'Recomendación (NPS)',
+        'loyalty': 'Lealtad'
+      };
+      
+      const actualMetricName = metricMap[metricName] || metricName;
+      const metricData = data.filter(item => item.metric === actualMetricName);
+      
       return metricData.length > 0 
         ? metricData.reduce((sum, item) => sum + item.averageRating, 0) / metricData.length 
         : 0;
@@ -161,7 +167,8 @@ export const useSegmentAnalysis = () => {
       clarity: Number(calculateMetricStats(personasData, 'clarity').toFixed(2)),
       recommendation: Number(calculateMetricStats(personasData, 'recommendation').toFixed(2)),
       loyalty: Number(calculateMetricStats(personasData, 'loyalty').toFixed(2)),
-      totalResponses: personasData.reduce((sum, item) => sum + item.totalResponses, 0)
+      // Solo tomar el totalResponses de un registro ya que todos tienen el mismo valor
+      totalResponses: personasData.length > 0 ? personasData[0].totalResponses : 0
     };
 
     // Calcular estadísticas para Empresas
@@ -170,7 +177,8 @@ export const useSegmentAnalysis = () => {
       clarity: Number(calculateMetricStats(empresasData, 'clarity').toFixed(2)),
       recommendation: Number(calculateMetricStats(empresasData, 'recommendation').toFixed(2)),
       loyalty: Number(calculateMetricStats(empresasData, 'loyalty').toFixed(2)),
-      totalResponses: empresasData.reduce((sum, item) => sum + item.totalResponses, 0)
+      // Solo tomar el totalResponses de un registro ya que todos tienen el mismo valor
+      totalResponses: empresasData.length > 0 ? empresasData[0].totalResponses : 0
     };
 
     const personasAvg = personasData.length > 0 
@@ -182,7 +190,8 @@ export const useSegmentAnalysis = () => {
       : 0;
 
     return {
-      totalResponses: kpiData.reduce((sum, item) => sum + item.totalResponses, 0),
+      // Sumar solo las respuestas únicas por segmento, no por cada métrica
+      totalResponses: personasStats.totalResponses + empresasStats.totalResponses,
       personasResponses: personasStats.totalResponses,
       empresasResponses: empresasStats.totalResponses,
       personasAverage: Number(personasAvg.toFixed(2)),
@@ -230,11 +239,13 @@ export const useSegmentAnalysis = () => {
     const personasData = kpiData.filter(item => item.segment === 'Personas');
     const empresasData = kpiData.filter(item => item.segment === 'Empresarial');
 
+    // Usar solo el primer registro de cada segmento para evitar duplicar las distribuciones
+    const personasFirstRecord = personasData.length > 0 ? personasData[0] : null;
+    const empresasFirstRecord = empresasData.length > 0 ? empresasData[0] : null;
+
     const personasDistribution = ratingLabels.map((label, index) => {
       const rating = index + 1;
-      const count = personasData.reduce((sum, item) => {
-        return sum + (item.ratingDistribution?.[rating] || 0);
-      }, 0);
+      const count = personasFirstRecord?.ratingDistribution?.[rating] || 0;
       return {
         name: label,
         value: count,
@@ -244,9 +255,7 @@ export const useSegmentAnalysis = () => {
 
     const empresasDistribution = ratingLabels.map((label, index) => {
       const rating = index + 1;
-      const count = empresasData.reduce((sum, item) => {
-        return sum + (item.ratingDistribution?.[rating] || 0);
-      }, 0);
+      const count = empresasFirstRecord?.ratingDistribution?.[rating] || 0;
       return {
         name: label,
         value: count,
@@ -290,10 +299,17 @@ export const useSegmentAnalysis = () => {
         ? empresasItems.reduce((sum, item) => sum + item.averageRating, 0) / empresasItems.length 
         : 0;
 
+      const personasValue = Number(personasAvg.toFixed(2));
+      const empresasValue = Number(empresasAvg.toFixed(2));
+      const difference = Number((personasValue - empresasValue).toFixed(2));
+
       return {
         metric,
-        personas: Number(personasAvg.toFixed(2)),
-        empresas: Number(empresasAvg.toFixed(2))
+        personas: personasValue,
+        empresas: empresasValue,
+        difference,
+        personasColor: '#3B82F6',
+        empresasColor: '#F97316'
       };
     });
   }, [kpiData, hasValidData]);

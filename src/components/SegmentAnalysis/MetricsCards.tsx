@@ -39,8 +39,8 @@ const MetricsCards: React.FC<MetricsCardsProps> = React.memo(({ kpiData, hasVali
       }
 
       const satisfaccionItems = segmentData.filter(item => item.metric === 'Satisfacción General');
-      const claridadItems = segmentData.filter(item => item.metric === 'Claridad');
-      const recomendacionItems = segmentData.filter(item => item.metric === 'Recomendación');
+      const claridadItems = segmentData.filter(item => item.metric === 'Claridad de Información');
+      const recomendacionItems = segmentData.filter(item => item.metric === 'Recomendación (NPS)');
       const lealtadItems = segmentData.filter(item => item.metric === 'Lealtad');
 
       return {
@@ -56,13 +56,14 @@ const MetricsCards: React.FC<MetricsCardsProps> = React.memo(({ kpiData, hasVali
         lealtad: lealtadItems.length > 0 
           ? Number((lealtadItems.reduce((sum, item) => sum + item.averageRating, 0) / lealtadItems.length).toFixed(2))
           : 0,
-        totalResponses: segmentData.reduce((sum, item) => sum + item.totalResponses, 0)
+        // Solo tomar el totalResponses de un registro ya que todos tienen el mismo valor
+        totalResponses: segmentData.length > 0 ? segmentData[0].totalResponses : 0
       };
     };
 
     return {
       personasMetrics: calculateMetricsBySegment('Personas'),
-      empresasMetrics: calculateMetricsBySegment('Empresas')
+      empresasMetrics: calculateMetricsBySegment('Empresarial')
     };
   }, [kpiData]);
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavItem } from "../types";
 
 interface NavigationSidebarProps {
@@ -10,7 +10,9 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   currentPage,
   onPageChange,
 }) => {
-  const navItems: NavItem[] = [
+  const [isTechnicalMenuOpen, setIsTechnicalMenuOpen] = useState(false);
+
+  const mainNavItems: NavItem[] = [
     {
       id: "inicio",
       label: "Inicio",
@@ -59,6 +61,9 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
       icon: "🔍",
       description: "Análisis exploratorio interactivo",
     },
+  ];
+
+  const technicalNavItems: NavItem[] = [
     {
       id: "pruebas-componentes",
       label: "Pruebas de Componentes",
@@ -103,6 +108,9 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     },
   ];
 
+  const allNavItems = [...mainNavItems, ...technicalNavItems];
+  const isTechnicalItemActive = technicalNavItems.some(item => item.id === currentPage);
+
   return (
     <nav className="w-80 bg-gradient-to-b from-gray-50 via-white to-gray-50 shadow-2xl border-r border-gray-200 min-h-screen relative">
       {/* Background pattern */}
@@ -136,7 +144,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
               {/* Quick stats */}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
-                  <div className="text-sm font-bold">{navItems.length}</div>
+                  <div className="text-sm font-bold">{allNavItems.length}</div>
                   <div className="text-xs text-brand-light">Módulos</div>
                 </div>
                 <div className="bg-white/10 rounded-lg p-3 text-center backdrop-blur-sm">
@@ -156,7 +164,8 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
             Módulos del Sistema
           </div>
 
-          {navItems.map((item) => (
+          {/* Main navigation items */}
+          {mainNavItems.map((item) => (
             <div key={item.id} className="relative">
               <button
                 onClick={() => onPageChange(item.id)}
@@ -223,6 +232,140 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
               </button>
             </div>
           ))}
+
+          {/* Technical modules dropdown */}
+          <div className="mt-6">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4 px-3">
+              Módulos Técnicos
+            </div>
+            
+            <div className="relative">
+              <button
+                onClick={() => setIsTechnicalMenuOpen(!isTechnicalMenuOpen)}
+                className={`w-full text-left px-4 py-4 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                  isTechnicalItemActive
+                    ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-xl transform scale-102 border-2 border-orange-300/30"
+                    : "text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:shadow-lg hover:scale-101 border-2 border-transparent"
+                }`}
+              >
+                {/* Background overlay for active state */}
+                {isTechnicalItemActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl"></div>
+                )}
+
+                {/* Hover background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-red-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                <div className="relative flex items-start space-x-4">
+                  {/* Icon with enhanced styling */}
+                  <div
+                    className={`text-2xl flex-shrink-0 mt-1 transition-transform duration-300 group-hover:scale-110 ${
+                      isTechnicalItemActive ? "filter drop-shadow-sm" : ""
+                    }`}
+                  >
+                    ⚙️
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`font-semibold text-sm block truncate ${
+                          isTechnicalItemActive
+                            ? "text-white"
+                            : "text-gray-800 group-hover:text-orange-600"
+                        }`}
+                      >
+                        Herramientas Técnicas
+                      </span>
+
+                      {/* Dropdown arrow */}
+                      <div className={`flex-shrink-0 ml-2 transition-transform duration-300 ${
+                        isTechnicalMenuOpen ? "rotate-180" : ""
+                      }`}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+
+                      {/* Active indicator */}
+                      {isTechnicalItemActive && (
+                        <div className="flex-shrink-0 ml-2">
+                          <div className="w-2 h-2 bg-orange-300 rounded-full animate-pulse"></div>
+                        </div>
+                      )}
+                    </div>
+
+                    <span
+                      className={`text-xs block truncate mt-1 leading-relaxed ${
+                        isTechnicalItemActive
+                          ? "text-orange-100"
+                          : "text-gray-500 group-hover:text-gray-600"
+                      }`}
+                    >
+                      Diagnósticos, pruebas y validaciones internas
+                    </span>
+                  </div>
+                </div>
+
+                {/* Border accent for active item */}
+                {isTechnicalItemActive && (
+                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-orange-300 rounded-r-full"></div>
+                )}
+              </button>
+
+              {/* Technical submenu */}
+              {isTechnicalMenuOpen && (
+                <div className="mt-2 ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
+                  {technicalNavItems.map((item) => (
+                    <div key={item.id} className="relative">
+                      <button
+                        onClick={() => onPageChange(item.id)}
+                        className={`w-full text-left px-3 py-3 rounded-lg transition-all duration-300 group relative overflow-hidden ${
+                          currentPage === item.id
+                            ? "bg-gradient-to-r from-orange-400 to-red-400 text-white shadow-lg transform scale-102"
+                            : "text-gray-600 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:shadow-md hover:scale-101"
+                        }`}
+                      >
+                        <div className="relative flex items-start space-x-3">
+                          {/* Icon */}
+                          <div className={`text-lg flex-shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110`}>
+                            {item.icon}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className={`font-medium text-xs block truncate ${
+                                currentPage === item.id
+                                  ? "text-white"
+                                  : "text-gray-700 group-hover:text-orange-600"
+                              }`}
+                            >
+                              {item.label}
+                            </span>
+
+                            <span
+                              className={`text-xs block truncate mt-0.5 leading-relaxed ${
+                                currentPage === item.id
+                                  ? "text-orange-100"
+                                  : "text-gray-500 group-hover:text-gray-600"
+                              }`}
+                            >
+                              {item.description}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Border accent for active item */}
+                        {currentPage === item.id && (
+                          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-orange-200 rounded-r-full"></div>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Simplified footer */}

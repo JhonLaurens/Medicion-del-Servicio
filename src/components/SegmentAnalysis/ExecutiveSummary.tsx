@@ -42,7 +42,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
   const overallAverage = (personasAverage + empresasAverage) / 2;
   
   // Determinar el segmento con mejor rendimiento
-  const betterSegment = personasAverage > empresasAverage ? 'Personas' : 'Empresas';
+  const betterSegment = personasAverage > empresasAverage ? 'Personas' : 'Empresarial';
   const betterStats = personasAverage > empresasAverage ? personasStats : empresasStats;
   const worseStats = personasAverage > empresasAverage ? empresasStats : personasStats;
   const performanceDifference = Math.abs(personasAverage - empresasAverage);
@@ -83,7 +83,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
     const recommendations = [];
     
     if (performanceDifference > 1) {
-      recommendations.push(`Enfocar esfuerzos en mejorar la experiencia del segmento ${betterSegment === 'Personas' ? 'Empresas' : 'Personas'}, que muestra ${performanceDifference.toFixed(1)} puntos de diferencia.`);
+      recommendations.push(`Enfocar esfuerzos en mejorar la experiencia del segmento ${betterSegment === 'Personas' ? 'Empresarial' : 'Personas'}, que muestra ${performanceDifference.toFixed(2)} puntos de diferencia.`);
     }
     
     if (personasOpportunities.length > 0) {
@@ -129,7 +129,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
           <div className="text-2xl mb-2">{personasPerformance.icon}</div>
           <h3 className="font-semibold text-gray-800">👥 Segmento Personas</h3>
           <p className={`text-2xl font-bold ${personasPerformance.color}`}>
-            {personasAverage.toFixed(1)}
+            {personasAverage.toFixed(2)}
           </p>
           <p className={`text-sm ${personasPerformance.color}`}>
             {personasPerformance.level}
@@ -143,7 +143,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
           <div className="text-2xl mb-2">{empresasPerformance.icon}</div>
           <h3 className="font-semibold text-gray-800">🏢 Segmento Empresas</h3>
           <p className={`text-2xl font-bold ${empresasPerformance.color}`}>
-            {empresasAverage.toFixed(1)}
+            {empresasAverage.toFixed(2)}
           </p>
           <p className={`text-sm ${empresasPerformance.color}`}>
             {empresasPerformance.level}
@@ -157,7 +157,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
           <div className="text-2xl mb-2">{overallPerformance.icon}</div>
           <h3 className="font-semibold text-gray-800">📊 Promedio General</h3>
           <p className={`text-2xl font-bold ${overallPerformance.color}`}>
-            {overallAverage.toFixed(1)}
+            {overallAverage.toFixed(2)}
           </p>
           <p className={`text-sm ${overallPerformance.color}`}>
             {overallPerformance.level}
@@ -179,7 +179,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                 <ul className="space-y-1">
                   {personasStrengths.map((strength, index) => (
                     <li key={index} className="text-sm text-gray-700">
-                      ✅ {getMetricName(strength.key)}: {strength.value.toFixed(1)}
+                      ✅ {getMetricName(strength.key)}: {strength.value.toFixed(2)}
                     </li>
                   ))}
                 </ul>
@@ -193,7 +193,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                   <ul className="space-y-1">
                     {personasOpportunities.map((opportunity, index) => (
                       <li key={index} className="text-sm text-gray-700">
-                        🔄 {getMetricName(opportunity.key)}: {opportunity.value.toFixed(1)}
+                        🔄 {getMetricName(opportunity.key)}: {opportunity.value.toFixed(2)}
                       </li>
                     ))}
                   </ul>
@@ -207,7 +207,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                 <ul className="space-y-1">
                   {empresasStrengths.map((strength, index) => (
                     <li key={index} className="text-sm text-gray-700">
-                      ✅ {getMetricName(strength.key)}: {strength.value.toFixed(1)}
+                      ✅ {getMetricName(strength.key)}: {strength.value.toFixed(2)}
                     </li>
                   ))}
                 </ul>
@@ -221,7 +221,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                   <ul className="space-y-1">
                     {empresasOpportunities.map((opportunity, index) => (
                       <li key={index} className="text-sm text-gray-700">
-                        🔄 {getMetricName(opportunity.key)}: {opportunity.value.toFixed(1)}
+                        🔄 {getMetricName(opportunity.key)}: {opportunity.value.toFixed(2)}
                       </li>
                     ))}
                   </ul>
@@ -286,10 +286,10 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                       {metric.name}
                     </td>
                     <td className="px-4 py-3 text-sm text-center text-blue-600 font-semibold">
-                      {metric.personas.toFixed(1)}
+                      {metric.personas.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-sm text-center text-orange-600 font-semibold">
-                      {metric.empresas.toFixed(1)}
+                      {metric.empresas.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-sm text-center font-semibold">
                       <span className={`${
@@ -299,7 +299,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
                             ? 'text-blue-600' 
                             : 'text-orange-600'
                       }`}>
-                        {difference > 0 ? '+' : ''}{difference.toFixed(1)}
+                        {difference > 0 ? '+' : ''}{difference.toFixed(2)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-center">
@@ -319,8 +319,8 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
           <h4 className="font-semibold text-gray-800 mb-2">🎯 Conclusión Principal</h4>
           <p className="text-sm text-gray-700">
             {performanceDifference > 1 
-              ? `Existe una diferencia significativa de ${performanceDifference.toFixed(1)} puntos entre segmentos. El segmento ${betterSegment} muestra mejor rendimiento general, sugiriendo la necesidad de estrategias diferenciadas.`
-              : `Ambos segmentos muestran rendimiento similar (diferencia: ${performanceDifference.toFixed(1)} puntos), lo que indica consistencia en la experiencia del servicio.`
+              ? `Existe una diferencia significativa de ${performanceDifference.toFixed(2)} puntos entre segmentos. El segmento ${betterSegment} muestra mejor rendimiento general, sugiriendo la necesidad de estrategias diferenciadas.`
+              : `Ambos segmentos muestran rendimiento similar (diferencia: ${performanceDifference.toFixed(2)} puntos), lo que indica consistencia en la experiencia del servicio.`
             }
             {overallAverage >= 8 
               ? ' El rendimiento general es sólido, enfocarse en mantener estándares y optimizar áreas específicas.'

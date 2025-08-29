@@ -1,1 +1,111 @@
-respuestas en español
+# 🚫 Dependencias (no aportan al análisis)
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# 🚫 Archivos de compilación/caché
+dist/
+.cache/
+.vite/
+coverage/
+
+# 🚫 Variables de entorno (excepto ejemplo)
+.env
+.env.*
+!.env.example
+*.log
+
+# 🚫 Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# 🚫 Configs de IDE/Editor
+.vscode/
+.idea/
+
+# 🚫 Archivos multimedia grandes (no necesarios para entender el código)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.avi
+
+# 🚫 Documentos pesados que no afectan el código
+*.pdf
+*.docx
+*.pptx
+
+# 🚫 Scripts de debug y verificación (no son código fuente principal)
+*debug*.js
+*debug*.mjs
+*debug*.cjs
+verify-setup.js
+verify-setup.ps1
+final-verification.js
+verificacion-*.js
+analyze-*.js
+browser-*.js
+check-*.js
+build-check.*
+simular-*.js
+
+# 🚫 Archivos de respaldo y temporales
+respaldo/
+*.bak
+*.tmp
+*.temp
+
+# 🚫 Documentación extensa (mantener solo esenciales)
+docs/
+*.md
+!README.md
+!DEPLOYMENT-STATUS.md
+
+# 🚫 Scripts de automatización y batch
+*.bat
+*.ps1
+*.sh
+scripts/debug/
+scripts/validation/
+scripts/mcp-*.json
+scripts/start*.bat
+scripts/test*.bat
+
+# 🚫 Archivos de configuración MCP específicos
+mcp-config-*.json
+
+# 🚫 Componentes duplicados y de prueba en raíz
+components/
+TestComponent.tsx
+index.tsx
+index.css
+index.html
+types.ts
+services/
+
+# 🚫 Archivos de test y diagnóstico HTML
+*.html
+!src/**/*.html
+
+# 🚫 Archivos de metadatos y configuración de deployment
+metadata.json
+vercel.json
+.vercelignore
+.nojekyll
+prepare-deployment.ps1
+setup-env.sh
+
+# 🚫 Archivos de caché de Python
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# 🚫 Reportes y archivos de corrección completados
+REPORTE-*.js
+PROBLEMA-*.js
+VERCEL-DEPLOYMENT.md
+test-environments.html

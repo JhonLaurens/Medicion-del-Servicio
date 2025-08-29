@@ -45,15 +45,24 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
+      const total = data.name.includes('Personas') ? personasTotal : empresasTotal;
+      const percentage = ((data.value / total) * 100).toFixed(2);
+      
       return (
-        <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-800">{data.name}</p>
-          <p className="text-blue-600">
-            Respuestas: <span className="font-bold">{data.value.toLocaleString()}</span>
-          </p>
-          <p className="text-gray-600">
-            Porcentaje: <span className="font-bold">{((data.value / (data.payload.total || 1)) * 100).toFixed(1)}%</span>
-          </p>
+        <div className="bg-white p-4 border border-slate-200 rounded-xl shadow-xl">
+          <div className="border-b border-slate-100 pb-2 mb-3">
+            <p className="font-semibold text-slate-800 text-sm">{data.name}</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Respuestas:</span>
+              <span className="font-bold text-slate-800">{data.value.toLocaleString('es-ES')}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 text-sm">Porcentaje:</span>
+              <span className="font-bold text-blue-600">{percentage}%</span>
+            </div>
+          </div>
         </div>
       );
     }
@@ -61,18 +70,23 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
   };
 
   const renderCustomLabel = (entry: any, total: number) => {
-    const percentage = ((entry.value / total) * 100).toFixed(1);
+    const percentage = ((entry.value / total) * 100).toFixed(2);
     return `${percentage}%`;
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Distribución Personas */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-          <span className="mr-2">👥</span>
-          Distribución - Personas
-        </h3>
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+        <span className="mr-3">📈</span>
+        Distribución de Calificaciones
+      </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Distribución Personas */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+          <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+            <span className="mr-2">👥</span>
+            Distribución - Personas
+          </h3>
         {personasData.length > 0 ? (
           <div className="w-full h-80 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
@@ -123,12 +137,12 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
         )}
       </div>
 
-      {/* Distribución Empresas */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-          <span className="mr-2">🏢</span>
-          Distribución - Empresas
-        </h3>
+        {/* Distribución Empresarial */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200">
+          <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+            <span className="mr-2">🏢</span>
+            Distribución - Empresarial
+          </h3>
         {empresasData.length > 0 ? (
           <div className="w-full h-80 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
@@ -173,10 +187,11 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
             <div className="text-center">
               <div className="text-4xl mb-2">🏢</div>
               <div className="text-lg font-medium mb-1">Sin datos disponibles</div>
-              <div className="text-sm text-gray-400">No hay información para empresas</div>
+              <div className="text-sm text-gray-400">No hay información para empresarial</div>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -62,25 +62,36 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
       const empresasData = payload.find((p: any) => p.dataKey === 'empresas');
       
       return (
-        <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-800 mb-2">{label}</p>
-          {personasData && (
-            <p className="text-blue-600">
-              👥 Personas: <span className="font-bold">{personasData.value.toFixed(1)}</span>
-            </p>
-          )}
-          {empresasData && (
-            <p className="text-orange-600">
-              🏢 Empresas: <span className="font-bold">{empresasData.value.toFixed(1)}</span>
-            </p>
-          )}
-          {personasData && empresasData && (
-            <p className="text-gray-600 mt-1 pt-1 border-t">
-              Diferencia: <span className="font-bold">
-                {(personasData.value - empresasData.value).toFixed(1)} puntos
-              </span>
-            </p>
-          )}
+        <div className="bg-white p-4 border border-slate-200 rounded-xl shadow-xl">
+          <div className="border-b border-slate-100 pb-2 mb-3">
+            <p className="font-semibold text-slate-800 text-sm">{label}</p>
+          </div>
+          <div className="space-y-2">
+            {personasData && (
+              <div className="flex justify-between items-center">
+                <span className="text-blue-600 text-sm flex items-center">
+                  <span className="mr-1">👥</span> Personas:
+                </span>
+                <span className="font-bold text-slate-800">{personasData.value.toFixed(2)}</span>
+              </div>
+            )}
+            {empresasData && (
+              <div className="flex justify-between items-center">
+                <span className="text-orange-600 text-sm flex items-center">
+                  <span className="mr-1">🏢</span> Empresarial:
+                </span>
+                <span className="font-bold text-slate-800">{empresasData.value.toFixed(2)}</span>
+              </div>
+            )}
+            {personasData && empresasData && (
+              <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                <span className="text-slate-600 text-sm">Diferencia:</span>
+                <span className="font-bold text-slate-800">
+                  {(personasData.value - empresasData.value).toFixed(2)} pts
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -101,25 +112,31 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
 
   const getInsightText = (metric: string, difference: number, personas: number, empresas: number) => {
     const absDiff = Math.abs(difference);
-    const higherSegment = difference > 0 ? 'Personas' : 'Empresas';
-    const lowerSegment = difference > 0 ? 'Empresas' : 'Personas';
+    const higherSegment = difference > 0 ? 'Personas' : 'Empresarial';
+    const lowerSegment = difference > 0 ? 'Empresarial' : 'Personas';
     const higherValue = difference > 0 ? personas : empresas;
     const lowerValue = difference > 0 ? empresas : personas;
     
     if (absDiff < 0.5) {
-      return `${metric}: Ambos segmentos muestran valores similares (diferencia: ${absDiff.toFixed(1)} puntos)`;
+      return `${metric}: Ambos segmentos muestran valores similares (diferencia: ${absDiff.toFixed(2)} puntos)`;
     }
     
-    return `${metric}: ${higherSegment} supera a ${lowerSegment} por ${absDiff.toFixed(1)} puntos (${higherValue.toFixed(1)} vs ${lowerValue.toFixed(1)})`;
+    return `${metric}: ${higherSegment} supera a ${lowerSegment} por ${absDiff.toFixed(2)} puntos (${higherValue.toFixed(2)} vs ${lowerValue.toFixed(2)})`;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">⚖️ Comparación entre Segmentos</h2>
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+        <span className="mr-3">⚖️</span>
+        Comparación entre Segmentos
+      </h2>
       
       {/* Gráfico de barras comparativo */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Métricas por Segmento</h3>
+      <div className="mb-8 bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
+        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+          <span className="mr-2">📊</span>
+          Métricas por Segmento
+        </h3>
         <div className="h-96 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -170,7 +187,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
               />
               <Bar 
                 dataKey="empresas" 
-                name="🏢 Empresas"
+                name="🏢 Empresarial"
                 fill="#F97316"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={50}
@@ -182,18 +199,18 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
 
       {/* Insights principales */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
           <span className="mr-2">💡</span>
           Insights Clave
         </h3>
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg border border-blue-200">
+        <div className="p-6 bg-gradient-to-r from-blue-50 to-orange-50 rounded-xl border border-blue-200">
           <div className="grid gap-3">
             {topDifferences.map((item, index) => (
-              <div key={index} className="bg-white rounded-lg p-4 border-l-4 border-blue-400 shadow-sm">
-                <div className="flex items-start space-x-3">
+              <div key={index} className="bg-white rounded-xl p-5 border-l-4 border-blue-400 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <div className="flex items-start space-x-4">
                   <span className="text-2xl">{getInsightIcon(item.difference)}</span>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-slate-700 leading-relaxed">
                       {getInsightText(item.metric, item.difference, item.personas, item.empresas)}
                     </p>
                   </div>
@@ -205,7 +222,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
                           ? 'text-blue-600' 
                           : 'text-orange-600'
                     }`}>
-                      {item.difference > 0 ? '+' : ''}{item.difference.toFixed(1)}
+                      {item.difference > 0 ? '+' : ''}{item.difference.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -221,7 +238,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
           <h4 className="font-semibold text-blue-800 text-sm">Promedio Personas</h4>
           <p className="text-xl font-bold text-blue-600">
             {Array.isArray(comparisonData) && comparisonData.length > 0
-              ? (comparisonData.reduce((sum, item) => sum + (item?.personas || 0), 0) / comparisonData.length).toFixed(1)
+              ? (comparisonData.reduce((sum, item) => sum + (item?.personas || 0), 0) / comparisonData.length).toFixed(2)
               : '0.0'
             }
           </p>
@@ -230,7 +247,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
           <h4 className="font-semibold text-orange-800 text-sm">Promedio Empresas</h4>
           <p className="text-xl font-bold text-orange-600">
             {Array.isArray(comparisonData) && comparisonData.length > 0
-              ? (comparisonData.reduce((sum, item) => sum + (item?.empresas || 0), 0) / comparisonData.length).toFixed(1)
+              ? (comparisonData.reduce((sum, item) => sum + (item?.empresas || 0), 0) / comparisonData.length).toFixed(2)
               : '0.0'
             }
           </p>
@@ -239,7 +256,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
           <h4 className="font-semibold text-green-800 text-sm">Mayor Diferencia</h4>
           <p className="text-xl font-bold text-green-600">
             {Array.isArray(comparisonData) && comparisonData.length > 0
-              ? Math.max(...comparisonData.map(item => Math.abs(item?.difference || 0))).toFixed(1)
+              ? Math.max(...comparisonData.map(item => Math.abs(item?.difference || 0))).toFixed(2)
               : '0.0'
             }
           </p>
@@ -248,7 +265,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
           <h4 className="font-semibold text-purple-800 text-sm">Diferencia Promedio</h4>
           <p className="text-xl font-bold text-purple-600">
             {Array.isArray(comparisonData) && comparisonData.length > 0
-              ? (comparisonData.reduce((sum, item) => sum + Math.abs(item?.difference || 0), 0) / comparisonData.length).toFixed(1)
+              ? (comparisonData.reduce((sum, item) => sum + Math.abs(item?.difference || 0), 0) / comparisonData.length).toFixed(2)
               : '0.0'
             }
           </p>
@@ -283,10 +300,10 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
                     {item?.metric || 'N/A'}
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-blue-600 font-semibold">
-                    {(item?.personas || 0).toFixed(1)}
+                    {(item?.personas || 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-orange-600 font-semibold">
-                    {(item?.empresas || 0).toFixed(1)}
+                    {(item?.empresas || 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-sm text-center font-semibold">
                     <span className={`${
@@ -296,7 +313,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
                           ? 'text-blue-600' 
                           : 'text-orange-600'
                     }`}>
-                      {(item?.difference || 0) > 0 ? '+' : ''}{(item?.difference || 0).toFixed(1)}
+                      {(item?.difference || 0) > 0 ? '+' : ''}{(item?.difference || 0).toFixed(2)}
                     </span>
                   </td>
                 </tr>

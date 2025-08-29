@@ -60,6 +60,11 @@ const ManagerParticipationReport: React.FC = () => {
   
   // Estado para los managers filtrados en la tabla
   const [filteredManagers, setFilteredManagers] = useState<ManagerData[]>([]);
+  
+  // Estados para paginación y búsqueda
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const [managerData, setManagerData] = useState<{
     personasManagers: ManagerData[];
@@ -148,6 +153,27 @@ const ManagerParticipationReport: React.FC = () => {
     }
   }, [allExecutives]); // Trigger when executives are loaded
 
+  // Recalcular filterStats cuando cambie el tipo de filtro
+  useEffect(() => {
+    if (satisfactionDataService.isDataLoaded()) {
+      console.log("🔄 Recalculating filterStats for selectedFilterType:", selectedFilterType);
+      const allData = satisfactionDataService.getData();
+      if (allData && allData.length > 0) {
+        calculateFilterStats(allData);
+      }
+      // Reset selectedFilterValue cuando cambie el tipo de filtro
+      setSelectedFilterValue("all");
+    }
+  }, [selectedFilterType]);
+
+  // Aplicar filtros a la tabla cuando cambien los filtros
+  useEffect(() => {
+    if (satisfactionDataService.isDataLoaded()) {
+      console.log("🔄 Applying filters to table:", { selectedFilterType, selectedFilterValue });
+      applyFiltersToTable();
+    }
+  }, [selectedFilterType, selectedFilterValue, managerData]);
+
   // ... existing code ...
 
   const processManagerData = () => {
@@ -188,7 +214,7 @@ const ManagerParticipationReport: React.FC = () => {
       const firstRecord = records[0]; // Usar el primer registro como referencia
       const totalSurveys = records.length; // Contar todas las encuestas de este ejecutivo
       
-      // Usar información directamente del CSV
+      // Usar información directamente del CSV con validación mejorada
       let tipoEjecutivo = firstRecord["TIPO EJECUTIVO"] || "Sin Tipo";
       tipoEjecutivo = tipoEjecutivo.toUpperCase(); // Normalizar a mayúsculas
 
@@ -196,7 +222,7 @@ const ManagerParticipationReport: React.FC = () => {
       const segmento = firstRecord.SEGMENTO || "Sin Segmento";
       const ciudad = firstRecord.CIUDAD || "Sin Ciudad";
 
-      // Determinar categoría
+      // Determinar categoría con validación mejorada
       let category = "general";
       if (segmento.toLowerCase().includes("personas")) {
         category = "personas";
@@ -315,7 +341,7 @@ const ManagerParticipationReport: React.FC = () => {
             return "Sin Clasificar";
         }
       }).filter(Boolean)
-    )];
+    )].filter(value => value && value.trim() !== "");
 
     console.log("🔍 calculateFilterStats: Unique values for", selectedFilterType, ":", uniqueValues);
 
@@ -344,11 +370,11 @@ const ManagerParticipationReport: React.FC = () => {
         const satisfaccionCol = "En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?";
         const lealtadCol = "Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?";
 
-        // Calcular promedios de las métricas
-        const claridadValues = filteredData.map((r) => parseFloat(r[claridadCol])).filter((v) => !isNaN(v) && v > 0);
-        const recomendacionValues = filteredData.map((r) => parseFloat(r[recomendacionCol])).filter((v) => !isNaN(v) && v > 0);
-        const satisfaccionValues = filteredData.map((r) => parseFloat(r[satisfaccionCol])).filter((v) => !isNaN(v) && v > 0);
-        const lealtadValues = filteredData.map((r) => parseFloat(r[lealtadCol])).filter((v) => !isNaN(v) && v > 0);
+        // Calcular promedios de las métricas con validación mejorada
+        const claridadValues = filteredData.map((r) => parseFloat(r[claridadCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
+        const recomendacionValues = filteredData.map((r) => parseFloat(r[recomendacionCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
+        const satisfaccionValues = filteredData.map((r) => parseFloat(r[satisfaccionCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
+        const lealtadValues = filteredData.map((r) => parseFloat(r[lealtadCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
 
         const claridadPromedio = claridadValues.length > 0 ? claridadValues.reduce((a, b) => a + b, 0) / claridadValues.length : 0;
         const recomendacionPromedio = recomendacionValues.length > 0 ? recomendacionValues.reduce((a, b) => a + b, 0) / recomendacionValues.length : 0;
@@ -356,8 +382,8 @@ const ManagerParticipationReport: React.FC = () => {
         const lealtadPromedio = lealtadValues.length > 0 ? lealtadValues.reduce((a, b) => a + b, 0) / lealtadValues.length : 0;
 
         // Promedio general de todas las métricas válidas
-        const allValues = [...claridadValues, ...recomendacionValues, ...satisfaccionValues, ...lealtadValues];
-        const averageRating = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
+        const validMetrics = [claridadPromedio, recomendacionPromedio, satisfaccionPromedio, lealtadPromedio].filter(v => v > 0);
+        const averageRating = validMetrics.length > 0 ? validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length : 0;
 
         stats.push({
           filterValue: value,
@@ -386,26 +412,62 @@ const ManagerParticipationReport: React.FC = () => {
       ...managerData.otherEmpresarialManagers,
     ];
 
-    if (selectedFilterValue === "all") {
-      setFilteredManagers(allManagers);
+    console.log("🔍 applyFiltersToTable: Starting filter with", {
+      selectedFilterType,
+      selectedFilterValue,
+      totalManagers: allManagers.length
+    });
+
+    if (selectedFilterValue === "all" || selectedFilterValue.trim() === "") {
+      const sortedManagers = allManagers.sort((a, b) => {
+        if (b.surveys !== a.surveys) {
+          return b.surveys - a.surveys;
+        }
+        return a.name.localeCompare(b.name);
+      });
+      console.log("✅ applyFiltersToTable: No filter applied, returning all", sortedManagers.length, "managers");
+      setFilteredManagers(sortedManagers);
       return;
     }
 
     const filtered = allManagers.filter((manager) => {
+      let matches = false;
+      
       switch (selectedFilterType) {
         case "tipoEjecutivo":
-          return manager.tipoEjecutivo?.toUpperCase() === selectedFilterValue.toUpperCase();
+          // Normalizar ambos valores para comparación exacta
+          const managerTipo = manager.tipoEjecutivo?.toUpperCase().trim() || "";
+          const filterTipo = selectedFilterValue.toUpperCase().trim();
+          matches = managerTipo === filterTipo;
+          break;
         case "segmento":
-          return manager.segmento === selectedFilterValue;
+          const managerSegmento = manager.segmento?.trim() || "";
+          const filterSegmento = selectedFilterValue.trim();
+          matches = managerSegmento === filterSegmento;
+          break;
         case "ciudad":
-          return manager.ciudad === selectedFilterValue;
+          const managerCiudad = manager.ciudad?.trim() || "";
+          const filterCiudad = selectedFilterValue.trim();
+          matches = managerCiudad === filterCiudad;
+          break;
         case "agencia":
-          return manager.agencia === selectedFilterValue;
+          const managerAgencia = manager.agencia?.trim() || "";
+          const filterAgencia = selectedFilterValue.trim();
+          matches = managerAgencia === filterAgencia;
+          break;
         default:
-          return true;
+          matches = true;
       }
+      
+      return matches;
+    }).sort((a, b) => {
+      if (b.surveys !== a.surveys) {
+        return b.surveys - a.surveys;
+      }
+      return a.name.localeCompare(b.name);
     });
 
+    console.log("✅ applyFiltersToTable: Filter applied, found", filtered.length, "matching managers");
     setFilteredManagers(filtered);
   };
 
@@ -422,13 +484,31 @@ const ManagerParticipationReport: React.FC = () => {
     otherEmpresarialManagers,
   } = managerData;
   
-  // Usar managers filtrados si hay filtros aplicados, sino usar todos
+  // Usar siempre los managers filtrados (que incluyen todos cuando no hay filtro)
   const allManagers = filteredManagers.length > 0 ? filteredManagers : [
     ...personasManagers,
     ...bogotaManagers,
     ...medellinManagers,
     ...otherEmpresarialManagers,
   ];
+
+  // Aplicar búsqueda adicional si hay término de búsqueda
+  const searchFilteredManagers = searchTerm.trim() === "" 
+    ? allManagers 
+    : allManagers.filter(manager => 
+        manager.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manager.agencia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manager.ciudad?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manager.segmento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manager.tipoEjecutivo?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+  // Aplicar paginación
+  const totalItems = searchFilteredManagers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedManagers = searchFilteredManagers.slice(startIndex, endIndex);
 
   const getFilteredData = () => {
     switch (selectedCategory) {
@@ -548,64 +628,69 @@ const ManagerParticipationReport: React.FC = () => {
         </p>
       </div>
 
-      {/* Resumen ejecutivo */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          📈 Resumen Ejecutivo
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">
-              {totalSurveys.toLocaleString()}
+      {/* Layout Principal: Organización Vertical */}
+      <div className="space-y-12">
+        {/* Sección KPIs */}
+        <div className="w-full">
+          <div className="bg-white rounded-lg shadow-lg p-6 h-full">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">
+              📈 KPIs Principales
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+                <div className="text-3xl font-bold text-blue-600">
+                  {totalSurveys.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Total Encuestas</div>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-r from-green-50 to-green-100 rounded-lg">
+                <div className="text-3xl font-bold text-green-600">
+                  {totalManagers}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Ejecutivos Analizados</div>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+                <div className="text-3xl font-bold text-orange-600">
+                  {activeManagers}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Ejecutivos Activos</div>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                <div className="text-3xl font-bold text-purple-600">
+                  {activeManagers > 0
+                    ? Math.round(totalSurveys / activeManagers)
+                    : 0}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Promedio por Activo</div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Total Encuestas</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">
-              {totalManagers}
-            </div>
-            <div className="text-sm text-gray-600">Ejecutivos Analizados</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-orange-600">
-              {activeManagers}
-            </div>
-            <div className="text-sm text-gray-600">Ejecutivos Activos</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">
-              {activeManagers > 0
-                ? Math.round(totalSurveys / activeManagers)
-                : 0}
-            </div>
-            <div className="text-sm text-gray-600">Promedio por Activo</div>
           </div>
         </div>
-      </div>
 
-      {/* Sección de Filtros y Análisis */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          🔍 Análisis por Filtros
-        </h2>
+        {/* Sección Gráficos */}
+        <div className="w-full">
+          <div className="bg-white rounded-lg shadow-lg p-6 h-full">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">
+              📊 Análisis Visual y Filtros
+            </h2>
 
-        {/* Selector de tipo de filtro */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Seleccionar tipo de análisis:
-          </label>
-          <select
-            aria-label="Seleccionar tipo de filtro"
-            value={selectedFilterType}
-            onChange={(e) => setSelectedFilterType(e.target.value)}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="tipoEjecutivo">Tipo Ejecutivo</option>
-            <option value="segmento">Segmento</option>
-            <option value="ciudad">Ciudad</option>
-            <option value="agencia">Agencia</option>
-          </select>
-        </div>
+            {/* Selector de tipo de filtro */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar tipo de análisis:
+              </label>
+              <select
+                aria-label="Seleccionar tipo de filtro"
+                value={selectedFilterType}
+                onChange={(e) => setSelectedFilterType(e.target.value)}
+                className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ease-in-out hover:border-blue-400 hover:shadow-md transform hover:scale-[1.02]"
+              >
+                <option value="tipoEjecutivo">Tipo Ejecutivo</option>
+                <option value="segmento">Segmento</option>
+                <option value="ciudad">Ciudad</option>
+                <option value="agencia">Agencia</option>
+              </select>
+            </div>
 
         {/* Debug log para verificar filterStats antes del renderizado */}
         {console.log("🎨 RENDER: filterStats state:", {
@@ -732,116 +817,209 @@ const ManagerParticipationReport: React.FC = () => {
               </table>
             </div>
 
-            {/* Gráfico de barras para visualizar las métricas */}
-            <div className="mt-6">
-              <h4 className="text-md font-semibold text-gray-800 mb-4">
-                📈 Visualización de Métricas por{" "}
-                {selectedFilterType === "tipoEjecutivo"
-                  ? "Tipo Ejecutivo"
-                  : selectedFilterType === "segmento"
-                  ? "Segmento"
-                  : selectedFilterType === "ciudad"
-                  ? "Ciudad"
-                  : "Agencia"}
-              </h4>
+            {/* Sección de Gráficos Mejorada */}
+            <div className="mt-8 space-y-8">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                  📊 Análisis Visual de Métricas
+                </h3>
+                <p className="text-gray-600">
+                  Visualización interactiva de datos por {selectedFilterType === "tipoEjecutivo" ? "Tipo Ejecutivo" : selectedFilterType === "segmento" ? "Segmento" : selectedFilterType === "ciudad" ? "Ciudad" : "Agencia"}
+                </p>
+              </div>
+
               {filterStats.length === 0 ? (
-                <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="flex items-center justify-center h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
                   <div className="text-center">
-                    <div className="text-4xl mb-2">📊</div>
-                    <p className="text-gray-500 font-medium">No hay datos disponibles para mostrar</p>
-                    <p className="text-gray-400 text-sm mt-1">Selecciona un filtro diferente o verifica los datos</p>
+                    <div className="text-6xl mb-4 animate-pulse">📊</div>
+                    <p className="text-gray-500 font-medium text-lg">No hay datos disponibles para mostrar</p>
+                    <p className="text-gray-400 text-sm mt-2">Selecciona un filtro diferente o verifica los datos</p>
                   </div>
                 </div>
               ) : (
-                <div style={{ height: Math.max(400, filterStats.slice(0, 10).length * 40 + 150) }}>
-                  <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={filterStats.slice(0, 10)}
-                        margin={{ top: 30, right: 40, left: 40, bottom: 100 }}
-                        barCategoryGap="15%"
-                        barGap={2}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.7} />
-                        <XAxis
-                          dataKey="filterValue"
-                          angle={-45}
-                          textAnchor="end"
-                          height={90}
-                          interval={0}
-                          tick={{ fontSize: 12, fill: '#374151' }}
-                          axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          label={{ value: selectedFilterType === "tipoEjecutivo" ? "Tipo Ejecutivo" : selectedFilterType === "segmento" ? "Segmento" : selectedFilterType === "ciudad" ? "Ciudad" : "Agencia", position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fontSize: '14px', fontWeight: 'bold', fill: '#374151' } }}
-                        />
-                        <YAxis 
-                          domain={[0, 5]} 
-                          tick={{ fontSize: 12, fill: '#374151' }}
-                          axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
-                          label={{ value: 'Puntuación (1-5)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '14px', fontWeight: 'bold', fill: '#374151' } }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                            fontSize: '14px'
-                          }}
-                          labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}
-                          formatter={(value, name) => [
-                            typeof value === "number" ? value.toFixed(2) : value,
-                            name === "averageRating"
-                              ? "Promedio General"
-                              : name === "claridadPromedio"
-                              ? "Claridad"
-                              : name === "recomendacionPromedio"
-                              ? "Recomendación"
-                              : name === "satisfaccionPromedio"
-                              ? "Satisfacción"
-                              : name === "lealtadPromedio"
-                              ? "Lealtad"
-                              : name,
-                          ]}
-                        />
-                        <Legend 
-                          wrapperStyle={{ paddingTop: '20px' }}
-                          iconType="rect"
-                        />
-                        <Bar
-                          dataKey="averageRating"
-                          fill="#3B82F6"
-                          name="Promedio General"
-                          radius={[2, 2, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="claridadPromedio"
-                          fill="#10B981"
-                          name="Claridad"
-                          radius={[2, 2, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="recomendacionPromedio"
-                          fill="#F59E0B"
-                          name="Recomendación"
-                          radius={[2, 2, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="satisfaccionPromedio"
-                          fill="#EF4444"
-                          name="Satisfacción"
-                          radius={[2, 2, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="lealtadPromedio"
-                          fill="#8B5CF6"
-                          name="Lealtad"
-                          radius={[2, 2, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartErrorBoundary>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Gráfico de Barras Principal */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      📈 <span className="ml-2">Métricas de Satisfacción</span>
+                    </h4>
+                    <div style={{ height: 400 }}>
+                      <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={filterStats.slice(0, 8)}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                            barCategoryGap="20%"
+                            barGap={4}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                            <XAxis
+                              dataKey="filterValue"
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                              interval={0}
+                              tick={{ fontSize: 11, fill: '#374151' }}
+                              axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                              tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                            />
+                            <YAxis 
+                              domain={[0, 5]} 
+                              tick={{ fontSize: 11, fill: '#374151' }}
+                              axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                              tickLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                              label={{ value: 'Puntuación (1-5)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold', fill: '#374151' } }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                fontSize: '13px'
+                              }}
+                              labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}
+                              formatter={(value, name) => [
+                                typeof value === "number" ? value.toFixed(2) : value,
+                                name === "averageRating" ? "🎯 Promedio General" :
+                                name === "claridadPromedio" ? "💡 Claridad" :
+                                name === "recomendacionPromedio" ? "👍 Recomendación" :
+                                name === "satisfaccionPromedio" ? "😊 Satisfacción" :
+                                name === "lealtadPromedio" ? "❤️ Lealtad" : name,
+                              ]}
+                            />
+                            <Legend 
+                              wrapperStyle={{ paddingTop: '15px' }}
+                              iconType="rect"
+                            />
+                            <Bar
+                              dataKey="claridadPromedio"
+                              fill="#059669"
+                              name="💡 Claridad"
+                              radius={[3, 3, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="recomendacionPromedio"
+                              fill="#DC2626"
+                              name="👍 Recomendación"
+                              radius={[3, 3, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="satisfaccionPromedio"
+                              fill="#7C3AED"
+                              name="😊 Satisfacción"
+                              radius={[3, 3, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="lealtadPromedio"
+                              fill="#EA580C"
+                              name="❤️ Lealtad"
+                              radius={[3, 3, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartErrorBoundary>
+                    </div>
+                  </div>
+
+                  {/* Gráfico Circular de Distribución */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      🥧 <span className="ml-2">Distribución de Encuestas</span>
+                    </h4>
+                    <div style={{ height: 400 }}>
+                      <ChartErrorBoundary componentName="Gráfico Circular de Distribución">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={filterStats.slice(0, 6).map((stat, index) => ({
+                                name: stat.filterValue,
+                                value: stat.totalSurveys,
+                                fill: [
+                                  '#3B82F6', '#10B981', '#F59E0B', 
+                                  '#EF4444', '#8B5CF6', '#06B6D4'
+                                ][index % 6]
+                              }))}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                              outerRadius={120}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                              }}
+                              formatter={(value) => [`${value} encuestas`, 'Total']}
+                            />
+                            <Legend 
+                              wrapperStyle={{ paddingTop: '20px' }}
+                              iconType="circle"
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartErrorBoundary>
+                    </div>
+                  </div>
+
+                  {/* Gráfico de Comparación de Rendimiento */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 lg:col-span-2">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      🎯 <span className="ml-2">Comparación de Rendimiento General</span>
+                    </h4>
+                    <div style={{ height: 350 }}>
+                      <ChartErrorBoundary componentName="Gráfico de Comparación">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={filterStats.slice(0, 10)}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                            barCategoryGap="15%"
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                            <XAxis
+                              dataKey="filterValue"
+                              angle={-30}
+                              textAnchor="end"
+                              height={60}
+                              interval={0}
+                              tick={{ fontSize: 11, fill: '#374151' }}
+                            />
+                            <YAxis 
+                              domain={[0, 5]} 
+                              tick={{ fontSize: 11, fill: '#374151' }}
+                              label={{ value: 'Puntuación Promedio', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '12px', fontWeight: 'bold', fill: '#374151' } }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                              }}
+                              formatter={(value) => [typeof value === "number" ? value.toFixed(2) : value, "🎯 Promedio General"]}
+                            />
+                            <Bar
+                              dataKey="averageRating"
+                              fill="url(#colorGradient)"
+                              radius={[4, 4, 0, 0]}
+                            />
+                            <defs>
+                              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.9}/>
+                                <stop offset="95%" stopColor="#1E40AF" stopOpacity={0.7}/>
+                              </linearGradient>
+                            </defs>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartErrorBoundary>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -859,10 +1037,12 @@ const ManagerParticipationReport: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+          </div>
+        </div>
 
-      {/* Tabla detallada */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
+        {/* Sección de Tabla de Ejecutivos */}
+        <div className="w-full">
+        <div className="bg-white rounded-lg shadow-lg p-6 h-full">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">
           📋 Detalle de Participación
         </h2>
@@ -876,7 +1056,7 @@ const ManagerParticipationReport: React.FC = () => {
             <select
               value={selectedFilterType}
               onChange={(e) => setSelectedFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out hover:border-blue-400 hover:shadow-md transform hover:scale-[1.02]"
             >
               <option value="tipoEjecutivo">Tipo Ejecutivo</option>
               <option value="segmento">Segmento</option>
@@ -892,7 +1072,7 @@ const ManagerParticipationReport: React.FC = () => {
             <select
               value={selectedFilterValue}
               onChange={(e) => setSelectedFilterValue(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out hover:border-blue-400 hover:shadow-md transform hover:scale-[1.02]"
             >
               <option value="all">Todos</option>
               {filterStats.map((stat) => (
@@ -908,116 +1088,250 @@ const ManagerParticipationReport: React.FC = () => {
               <label className="text-sm font-medium text-gray-700 mb-2">
                 Resultados:
               </label>
-              <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+              <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800 transition-all duration-300 ease-in-out hover:bg-blue-100 hover:border-blue-300 animate-pulse">
                 {allManagers.length} ejecutivos encontrados
               </div>
             </div>
           )}
         </div>
 
-        {allManagers.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-lg">
-              No se encontraron datos de ejecutivos
+        {/* Barra de búsqueda y controles */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="🔍 Buscar ejecutivo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 w-64"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110 hover:bg-gray-100 rounded-full p-1"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out hover:border-blue-400 hover:shadow-md transform hover:scale-[1.02]"
+            >
+              <option value={5}>5 por página</option>
+              <option value={10}>10 por página</option>
+              <option value={25}>25 por página</option>
+              <option value={50}>50 por página</option>
+            </select>
+          </div>
+          <div className="text-sm text-gray-600 bg-white px-3 py-2 rounded-lg border">
+            📊 Total: {searchFilteredManagers.length} ejecutivos
+            {searchTerm && (
+              <span className="ml-2 text-blue-600">
+                (filtrados de {allManagers.length})
+              </span>
+            )}
+          </div>
+        </div>
+
+        {searchFilteredManagers.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-6xl mb-4">📊</div>
+            <p className="text-gray-500 text-lg font-medium mb-2">
+              {searchTerm ? "No se encontraron ejecutivos que coincidan con la búsqueda" : "No se encontraron datos de ejecutivos"}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {searchTerm ? "Intenta con otros términos de búsqueda" : "Verifica los filtros aplicados o la carga de datos"}
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  <th className="px-4 py-4 text-left font-semibold border-r border-blue-500">
-                    Ejecutivo
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold border-r border-blue-500">
-                    Encuestas
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold border-r border-blue-500">
-                    % del Total
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold border-r border-blue-500">
-                    Tipo Ejecutivo
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold border-r border-blue-500">
-                    Segmento
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold border-r border-blue-500">
-                    Ciudad
-                  </th>
-                  <th className="px-4 py-4 text-center font-semibold">
-                    Agencia
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {allManagers.map((manager, index) => (
-                  <tr
-                    key={index}
-                    className={`${
-                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    } hover:bg-blue-50 transition-colors duration-200 border-b border-gray-200`}
-                  >
-                    <td className="px-4 py-4 font-medium text-gray-800 border-r border-gray-200">
-                      <div className="flex items-center">
-                        <div
-                          className={`w-3 h-3 rounded-full mr-3 ${
-                            manager.surveys > 50
-                              ? "bg-green-500"
-                              : manager.surveys > 0
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                        ></div>
-                        <span
-                          className="truncate max-w-xs"
-                          title={manager.name}
-                        >
-                          {manager.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center border-r border-gray-200">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          manager.surveys > 50
-                            ? "bg-green-100 text-green-800"
-                            : manager.surveys > 0
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {manager.surveys}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center font-medium border-r border-gray-200">
-                      {manager.percentage.toFixed(2)}%
-                    </td>
-                    <td className="px-4 py-4 text-center border-r border-gray-200">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {manager.tipoEjecutivo || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center border-r border-gray-200">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {manager.segmento || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center border-r border-gray-200">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        {manager.ciudad || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {manager.agencia}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          <>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full table-auto">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                      <th className="px-3 py-3 text-left font-semibold text-sm border-r border-blue-500">
+                        👤 Ejecutivo
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm border-r border-blue-500">
+                        📊 Encuestas
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm border-r border-blue-500">
+                        📈 % Total
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm border-r border-blue-500">
+                        🏷️ Tipo
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm border-r border-blue-500">
+                        🎯 Segmento
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm border-r border-blue-500">
+                        🌍 Ciudad
+                      </th>
+                      <th className="px-3 py-3 text-center font-semibold text-sm">
+                        🏢 Agencia
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedManagers.map((manager, index) => {
+                      const globalIndex = startIndex + index;
+                      return (
+                          <tr
+                            key={globalIndex}
+                            className={`${
+                              index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                            } hover:bg-blue-50 transition-all duration-300 border-b border-gray-100 group transform hover:scale-[1.01] hover:shadow-sm animate-fade-in-up`}
+                            style={{
+                              animationDelay: `${index * 50}ms`,
+                              animationFillMode: 'both'
+                            }}
+                          >
+                            <td className="px-3 py-2 font-medium text-gray-800 border-r border-gray-100">
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex items-center space-x-1">
+                                    <div
+                                      className={`w-3 h-3 rounded-full border-2 ${
+                                        manager.surveys > 50
+                                          ? "bg-green-600 border-green-700"
+                                          : manager.surveys > 20
+                                          ? "bg-amber-500 border-amber-600"
+                                          : manager.surveys > 0
+                                          ? "bg-orange-600 border-orange-700"
+                                          : "bg-red-600 border-red-700"
+                                      }`}
+                                    ></div>
+                                    <span className="text-sm font-medium">
+                                      {manager.surveys > 50 ? "⭐" : manager.surveys > 20 ? "⚡" : manager.surveys > 0 ? "⚠️" : "❌"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span
+                                  className="truncate max-w-xs text-sm group-hover:text-blue-700 transition-colors"
+                                  title={manager.name}
+                                >
+                                  {manager.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-center border-r border-gray-100">
+                              <span
+                                className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
+                                  manager.surveys > 50
+                                    ? "bg-green-50 text-green-900 border-2 border-green-300 ring-1 ring-green-200"
+                                    : manager.surveys > 20
+                                    ? "bg-amber-50 text-amber-900 border-2 border-amber-300 ring-1 ring-amber-200"
+                                    : manager.surveys > 0
+                                    ? "bg-orange-50 text-orange-900 border-2 border-orange-300 ring-1 ring-orange-200"
+                                    : "bg-red-50 text-red-900 border-2 border-red-300 ring-1 ring-red-200"
+                                }`}
+                              >
+                                <span className="mr-1">
+                                  {manager.surveys > 50 ? "📈" : manager.surveys > 20 ? "📊" : manager.surveys > 0 ? "📉" : "📋"}
+                                </span>
+                                {manager.surveys}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center font-semibold text-sm border-r border-gray-100 text-gray-700">
+                              {manager.percentage.toFixed(1)}%
+                            </td>
+                            <td className="px-3 py-2 text-center border-r border-gray-100">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-900 border-2 border-purple-300 ring-1 ring-purple-200 shadow-sm">
+                                <span className="mr-1.5">👔</span>
+                                {manager.tipoEjecutivo || "N/A"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center border-r border-gray-100">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-900 border-2 border-emerald-300 ring-1 ring-emerald-200 shadow-sm">
+                                <span className="mr-1.5">🎯</span>
+                                {manager.segmento || "N/A"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center border-r border-gray-100">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-900 border-2 border-blue-300 ring-1 ring-blue-200 shadow-sm">
+                                <span className="mr-1.5">🌍</span>
+                                {manager.ciudad || "N/A"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-900 border-2 border-indigo-300 ring-1 ring-indigo-200 shadow-sm">
+                                <span className="mr-1.5">🏢</span>
+                                {manager.agencia || "N/A"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Mostrando {startIndex + 1} a {Math.min(endIndex, filteredManagers.length)} de {filteredManagers.length} ejecutivos
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      ← Anterior
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              currentPage === pageNum
+                                ? "bg-blue-600 text-white shadow-md"
+                                : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
       </div>
     </div>
   );

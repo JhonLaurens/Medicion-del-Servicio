@@ -181,7 +181,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header 
           currentPage={currentPage} 
-          onNavigateHome={() => handlePageChange('home')} 
+          onNavigateHome={() => handlePageChange('inicio')} 
         />
         <div className="flex flex-1">
           <NavigationSidebar 
