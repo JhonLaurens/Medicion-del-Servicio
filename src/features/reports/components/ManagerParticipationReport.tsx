@@ -15,6 +15,7 @@ import {
 import { satisfactionDataService } from '../../../services/dataService';
 import ChartErrorBoundary from '../../../components/ChartErrorBoundary';
 import ChartDebugger from '../../../components/ChartDebugger';
+import { calculateFilterStats as calculateUnifiedFilterStats } from '../../../utils/calculationUtils';
 
 interface ManagerData {
   name: string;
@@ -311,97 +312,20 @@ const ManagerParticipationReport: React.FC = () => {
     }
   };
 
-  // Función mejorada para calcular estadísticas por filtros
+  // Función unificada para calcular estadísticas por filtros
   const calculateFilterStats = (data: any[]) => {
-    console.log("🔍 calculateFilterStats: Starting calculation with", data.length, "records");
-
+    console.log("🔍 calculateFilterStats: Using unified calculation with", data.length, "records");
+    
     if (!data || data.length === 0) {
       console.log("❌ calculateFilterStats: No data available");
       setFilterStats([]);
       return;
     }
 
-    const stats: FilterStats[] = [];
-
-    // Obtener valores únicos para el tipo de filtro seleccionado
-    const uniqueValues = [...new Set(
-      data.map((record) => {
-        let value;
-        switch (selectedFilterType) {
-          case "tipoEjecutivo":
-            value = record["TIPO EJECUTIVO"] || "Sin Tipo";
-            // Normalizar a mayúsculas para consistencia
-            return value.toUpperCase();
-          case "segmento":
-            return record.SEGMENTO || "Sin Segmento";
-          case "ciudad":
-            return record.CIUDAD || "Sin Ciudad";
-          case "agencia":
-            return record.AGENCIA || "Sin Agencia";
-          default:
-            return "Sin Clasificar";
-        }
-      }).filter(Boolean)
-    )].filter(value => value && value.trim() !== "");
-
-    console.log("🔍 calculateFilterStats: Unique values for", selectedFilterType, ":", uniqueValues);
-
-    uniqueValues.forEach((value) => {
-      // Filtrar datos para este valor específico
-      const filteredData = data.filter((record) => {
-        switch (selectedFilterType) {
-          case "tipoEjecutivo":
-            const tipoValue = (record["TIPO EJECUTIVO"] || "Sin Tipo").toUpperCase();
-            return tipoValue === value;
-          case "segmento":
-            return (record.SEGMENTO || "Sin Segmento") === value;
-          case "ciudad":
-            return (record.CIUDAD || "Sin Ciudad") === value;
-          case "agencia":
-            return (record.AGENCIA || "Sin Agencia") === value;
-          default:
-            return false;
-        }
-      });
-
-      if (filteredData.length > 0) {
-        // Usar los nombres mapeados de las columnas (después del procesamiento del servicio)
-        const claridadCol = "claridad_informacion";
-        const recomendacionCol = "recomendacion";
-        const satisfaccionCol = "satisfaccion_general";
-        const lealtadCol = "lealtad";
-
-        // Calcular promedios de las métricas con validación mejorada
-        const claridadValues = filteredData.map((r) => parseFloat(r[claridadCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
-        const recomendacionValues = filteredData.map((r) => parseFloat(r[recomendacionCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
-        const satisfaccionValues = filteredData.map((r) => parseFloat(r[satisfaccionCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
-        const lealtadValues = filteredData.map((r) => parseFloat(r[lealtadCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
-
-        const claridadPromedio = claridadValues.length > 0 ? claridadValues.reduce((a, b) => a + b, 0) / claridadValues.length : 0;
-        const recomendacionPromedio = recomendacionValues.length > 0 ? recomendacionValues.reduce((a, b) => a + b, 0) / recomendacionValues.length : 0;
-        const satisfaccionPromedio = satisfaccionValues.length > 0 ? satisfaccionValues.reduce((a, b) => a + b, 0) / satisfaccionValues.length : 0;
-        const lealtadPromedio = lealtadValues.length > 0 ? lealtadValues.reduce((a, b) => a + b, 0) / lealtadValues.length : 0;
-
-        // Promedio general de todas las métricas válidas
-        const validMetrics = [claridadPromedio, recomendacionPromedio, satisfaccionPromedio, lealtadPromedio].filter(v => v > 0);
-        const averageRating = validMetrics.length > 0 ? validMetrics.reduce((a, b) => a + b, 0) / validMetrics.length : 0;
-
-        stats.push({
-          filterValue: value,
-          totalSurveys: filteredData.length,
-          averageRating: parseFloat(averageRating.toFixed(2)),
-          claridadPromedio: parseFloat(claridadPromedio.toFixed(2)),
-          recomendacionPromedio: parseFloat(recomendacionPromedio.toFixed(2)),
-          satisfaccionPromedio: parseFloat(satisfaccionPromedio.toFixed(2)),
-          lealtadPromedio: parseFloat(lealtadPromedio.toFixed(2)),
-        });
-      }
-    });
-
-    // Ordenar por número de encuestas descendente
-    const sortedStats = stats.sort((a, b) => b.totalSurveys - a.totalSurveys);
-    console.log("✅ calculateFilterStats: Final calculated stats:", sortedStats);
-    setFilterStats(sortedStats);
+    // Usar la función unificada de cálculo
+    const stats = calculateUnifiedFilterStats(data, selectedFilterType);
+    console.log("✅ calculateFilterStats: Unified calculation completed:", stats);
+    setFilterStats(stats);
   };
 
   // Función para aplicar filtros a la tabla de participación

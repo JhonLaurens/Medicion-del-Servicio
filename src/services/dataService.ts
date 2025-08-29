@@ -144,10 +144,19 @@ export class SatisfactionDataService {
   }
 
   private sanitizeNumericValue(value: any): number {
+    // Si el valor está vacío, null o undefined, retornar 0 (será filtrado en cálculos)
     if (value === null || value === undefined || value === '') return 0;
+    
     const num = Number(value);
+    
+    // Si no es un número válido, retornar 0
     if (isNaN(num) || !isFinite(num)) return 0;
-    return Math.max(1, Math.min(5, Math.round(num))); // Asegurar rango 1-5
+    
+    // Si está fuera del rango 1-5, retornar 0 (será filtrado)
+    if (num < 1 || num > 5) return 0;
+    
+    // Retornar el valor redondeado dentro del rango válido
+    return Math.round(num);
   }
 
   getTechnicalInfo(): TechnicalInfo {
@@ -297,7 +306,7 @@ export class SatisfactionDataService {
     try {
       const values = data
         .map(d => d[metricKey as keyof SatisfactionRecord] as number)
-        .filter(v => v !== null && v !== undefined && !isNaN(v)); // Removido && v > 0
+        .filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0); // Filtrar valores inválidos (0)
 
       if (values.length === 0) {
         return { average: 0, rating5: 0, rating4: 0, rating123: 0, total: 0 };
@@ -613,14 +622,14 @@ export class SatisfactionDataService {
   private calculateAverage(metric: keyof SatisfactionRecord): number {
     const values = this.data
       .map(d => d[metric] as number)
-      .filter(v => v !== null && !isNaN(v) && v !== undefined);
+      .filter(v => v !== null && !isNaN(v) && v !== undefined && v > 0 && v >= 1 && v <= 5);
     return values.length > 0 ? parseFloat((values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(2)) : 0;
   }
 
   private calculateAverageForRecords(records: SatisfactionRecord[], metric: keyof SatisfactionRecord): number {
     const values = records
       .map(d => d[metric] as number)
-      .filter(v => v !== null && !isNaN(v) && v !== undefined);
+      .filter(v => v !== null && !isNaN(v) && v !== undefined && v > 0 && v >= 1 && v <= 5);
     return values.length > 0 ? parseFloat((values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(2)) : 0;
   }
 
@@ -640,19 +649,31 @@ export class SatisfactionDataService {
 
   getOverallAverageRating(): number {
     if (this.data.length === 0) return 0;
-    const totalRating = this.data.reduce((sum, item) => sum + (item.satisfaccion_general || 0), 0);
-    return parseFloat((totalRating / this.data.length).toFixed(2));
+    const validRatings = this.data
+      .map(item => item.satisfaccion_general)
+      .filter(rating => rating !== null && rating !== undefined && !isNaN(rating) && rating > 0 && rating >= 1 && rating <= 5);
+    if (validRatings.length === 0) return 0;
+    const totalRating = validRatings.reduce((sum, rating) => sum + rating, 0);
+    return parseFloat((totalRating / validRatings.length).toFixed(2));
   }
 
   calculateNPS(): NPSData {
     if (this.data.length === 0) return { promoters: 0, passives: 0, detractors: 0, npsScore: 0 };
     let promoters = 0, passives = 0, detractors = 0;
-    this.data.forEach(item => {
+    const validResponses = this.data.filter(item => 
+      item.recomendacion !== null && 
+      item.recomendacion !== undefined && 
+      !isNaN(item.recomendacion) && 
+      item.recomendacion > 0 && 
+      item.recomendacion >= 1 && 
+      item.recomendacion <= 5
+    );
+    validResponses.forEach(item => {
       if (item.recomendacion === 5) promoters++;
       else if (item.recomendacion === 4) passives++;
       else if (item.recomendacion <= 3) detractors++;
     });
-    const totalResponses = this.data.length;
+    const totalResponses = validResponses.length;
     if (totalResponses === 0) return { promoters: 0, passives: 0, detractors: 0, npsScore: 0 };
     const promoterPercentage = (promoters / totalResponses) * 100;
     const detractorPercentage = (detractors / totalResponses) * 100;
@@ -663,7 +684,13 @@ export class SatisfactionDataService {
   getRatingDistribution(): ChartDataPoint[] {
     if (this.data.length === 0) return [];
     const distribution = [1, 2, 3, 4, 5].map(rating => {
-      const count = this.data.filter(item => item.satisfaccion_general === rating).length;
+      const count = this.data.filter(item => 
+        item.satisfaccion_general === rating &&
+        item.satisfaccion_general !== null &&
+        item.satisfaccion_general !== undefined &&
+        !isNaN(item.satisfaccion_general) &&
+        item.satisfaccion_general > 0
+      ).length;
       return {
         name: `Rating ${rating}`,
         value: count
@@ -675,11 +702,16 @@ export class SatisfactionDataService {
   getMonthlyTrend(): MonthlyTrendData[] {
     // Simulación de tendencia mensual
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Calcular promedios base usando la lógica de filtrado correcta
+    const baseLoyalty = this.calculateAverage('lealtad');
+    const baseRecommendation = this.calculateAverage('recomendacion');
+    
     return months.map(month => ({
       month,
       satisfaction: this.getOverallAverageRating() + (Math.random() - 0.5) * 0.5,
-      loyalty: this.data.length > 0 ? this.data.reduce((sum, item) => sum + (item.lealtad || 0), 0) / this.data.length + (Math.random() - 0.5) * 0.3 : 0,
-      recommendation: this.data.length > 0 ? this.data.reduce((sum, item) => sum + (item.recomendacion || 0), 0) / this.data.length + (Math.random() - 0.5) * 0.3 : 0
+      loyalty: baseLoyalty > 0 ? baseLoyalty + (Math.random() - 0.5) * 0.3 : 0,
+      recommendation: baseRecommendation > 0 ? baseRecommendation + (Math.random() - 0.5) * 0.3 : 0
     }));
   }
 
@@ -688,24 +720,40 @@ export class SatisfactionDataService {
     const agencyPerformance = new Map<string, { total: number; count: number }>();
     this.data.forEach(item => {
       const agency = item.AGENCIA;
-      if (!agencyPerformance.has(agency)) {
-        agencyPerformance.set(agency, { total: 0, count: 0 });
+      const rating = item.satisfaccion_general;
+      
+      // Solo incluir valores válidos
+      if (rating !== null && rating !== undefined && !isNaN(rating) && rating > 0 && rating >= 1 && rating <= 5) {
+        if (!agencyPerformance.has(agency)) {
+          agencyPerformance.set(agency, { total: 0, count: 0 });
+        }
+        const current = agencyPerformance.get(agency)!;
+        current.total += rating;
+        current.count += 1;
       }
-      const current = agencyPerformance.get(agency)!;
-      current.total += item.satisfaccion_general || 0;
-      current.count += 1;
     });
     return Array.from(agencyPerformance.entries())
       .map(([agency, data]) => ({
         department: agency,
-        averageRating: parseFloat((data.total / data.count).toFixed(2)),
+        averageRating: data.count > 0 ? parseFloat((data.total / data.count).toFixed(2)) : 0,
         responseCount: data.count
       }))
+      .filter(item => item.responseCount > 0) // Solo incluir agencias con respuestas válidas
       .sort((a, b) => a.averageRating - b.averageRating);
   }
 
   getTotalResponses(): number {
     return this.data.length;
+  }
+
+  getRawData(): SatisfactionRecord[] {
+    if (!this.isLoaded || this.data.length === 0) {
+      this.logError('⚠️ DataService: No data loaded for getRawData', new Error('No data available'));
+      return [];
+    }
+    
+    this.log('📊 getRawData: Returning', this.data.length, 'records');
+    return [...this.data]; // Return a copy to prevent external modifications
   }
 }
 

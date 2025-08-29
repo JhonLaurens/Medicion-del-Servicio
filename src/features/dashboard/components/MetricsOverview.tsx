@@ -24,7 +24,8 @@ import {
 } from "recharts";
 import Glossary from "../../../components/Glossary";
 import { satisfactionDataService } from "../../../services/dataService";
-import { KPIData } from "../../../types";
+import { calculateUnifiedMetrics, calculateSegmentMetrics } from "../../../utils/calculationUtils";
+import { KPIData, SatisfactionRecord } from "../../../types";
 
 interface MetricCard {
   metric: string;
@@ -37,9 +38,21 @@ interface MetricCard {
 
 const MetricsOverview: React.FC = () => {
   const [kpiData, setKpiData] = useState<KPIData[]>([]);
+  const [rawData, setRawData] = useState<SatisfactionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+  // Hook para manejar el redimensionamiento de ventana
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -48,13 +61,20 @@ const MetricsOverview: React.FC = () => {
         setError(null);
 
         await satisfactionDataService.loadData();
-        const data = satisfactionDataService.getKPIData();
+        const kpiDataFromService = satisfactionDataService.getKPIData();
+        const rawDataFromService = satisfactionDataService.getRawData();
 
-        if (!data || data.length === 0) {
+        if (!kpiDataFromService || kpiDataFromService.length === 0) {
           throw new Error("No se pudieron cargar los datos de KPI");
         }
 
-        setKpiData(data);
+        setKpiData(kpiDataFromService);
+        setRawData(rawDataFromService);
+        
+        console.log('✅ MetricsOverview: Data loaded', {
+          kpiRecords: kpiDataFromService.length,
+          rawRecords: rawDataFromService.length
+        });
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -71,53 +91,49 @@ const MetricsOverview: React.FC = () => {
   }, []);
 
   const prepareMetricsData = (): MetricCard[] => {
-    // Filtrar solo las 4 métricas principales
+    // Usar funciones unificadas para calcular métricas por segmento
+    const personasMetrics = calculateSegmentMetrics(rawData, 'PERSONAS');
+    const empresasMetrics = calculateSegmentMetrics(rawData, 'EMPRESARIAL');
+    const overallMetrics = calculateUnifiedMetrics(rawData);
+
+    // Definir las 4 métricas principales con sus valores unificados
     const mainMetrics = [
-      "Claridad de Información",
-      "Recomendación (NPS)",
-      "Satisfacción General",
-      "Lealtad",
+      {
+        metric: "Claridad de Información",
+        consolidado: overallMetrics.claridadPromedio,
+        personas: personasMetrics.claridadPromedio,
+        empresas: empresasMetrics.claridadPromedio,
+      },
+      {
+        metric: "Recomendación (NPS)",
+        consolidado: overallMetrics.recomendacionPromedio,
+        personas: personasMetrics.recomendacionPromedio,
+        empresas: empresasMetrics.recomendacionPromedio,
+      },
+      {
+        metric: "Satisfacción General",
+        consolidado: overallMetrics.satisfaccionPromedio,
+        personas: personasMetrics.satisfaccionPromedio,
+        empresas: empresasMetrics.satisfaccionPromedio,
+      },
+      {
+        metric: "Lealtad",
+        consolidado: overallMetrics.lealtadPromedio,
+        personas: personasMetrics.lealtadPromedio,
+        empresas: empresasMetrics.lealtadPromedio,
+      },
     ];
 
-    // Agrupar datos por métrica
-    const metricGroups: { [key: string]: KPIData[] } = {};
-
-    kpiData.forEach((kpi) => {
-      if (mainMetrics.includes(kpi.metric)) {
-        if (!metricGroups[kpi.metric]) {
-          metricGroups[kpi.metric] = [];
-        }
-        metricGroups[kpi.metric].push(kpi);
-      }
-    });
-
-    return mainMetrics.map((metricName) => {
-      const metricData = metricGroups[metricName] || [];
-
-      // Buscar datos por segmento
-      const personasData = metricData.find((d) => d.segment === "Personas");
-      const empresasData = metricData.find((d) => d.segment === "Empresarial");
-
-      const personasAvg = personasData?.averageRating || 0;
-      const empresasAvg = empresasData?.averageRating || 0;
-
-      // Calcular promedio consolidado como promedio de ambos segmentos
-      const consolidadoAvg =
-        personasAvg > 0 && empresasAvg > 0
-          ? (personasAvg + empresasAvg) / 2
-          : personasAvg > 0
-          ? personasAvg
-          : empresasAvg;
-
-      const gap = Math.abs(personasAvg - empresasAvg);
+    return mainMetrics.map((metricData) => {
+      const gap = Math.abs(metricData.personas - metricData.empresas);
       const priority: "high" | "medium" | "low" =
         gap > 0.5 ? "high" : gap > 0.2 ? "medium" : "low";
 
       return {
-        metric: metricName,
-        consolidado: Number(consolidadoAvg.toFixed(2)),
-        personas: Number(personasAvg.toFixed(2)),
-        empresas: Number(empresasAvg.toFixed(2)),
+        metric: metricData.metric,
+        consolidado: Number(metricData.consolidado.toFixed(2)),
+        personas: Number(metricData.personas.toFixed(2)),
+        empresas: Number(metricData.empresas.toFixed(2)),
         gap: Number(gap.toFixed(2)),
         priority,
       };
@@ -833,38 +849,43 @@ const MetricsOverview: React.FC = () => {
           </div>
         </div>
 
-          <div style={{ height: 450 }}>
+          <div className="h-96 sm:h-[450px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={historicalData}
-                margin={{ top: 20, right: 30, left: 40, bottom: 80 }}
+                margin={{ 
+                  top: 20, 
+                  right: windowWidth < 640 ? 15 : 30, 
+                  left: windowWidth < 640 ? 20 : 40, 
+                  bottom: windowWidth < 640 ? 60 : 80 
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="year"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: windowWidth < 640 ? 9 : 11 }}
                   axisLine={{ stroke: "#374151" }}
-                  angle={-45}
+                  angle={windowWidth < 640 ? -45 : -45}
                   textAnchor="end"
-                  height={60}
-                  interval={0}
+                  height={windowWidth < 640 ? 50 : 60}
+                  interval={windowWidth < 640 ? 1 : 0}
                 />
                 <YAxis
                   domain={[3.5, 4.5]}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: windowWidth < 640 ? 9 : 11 }}
                   axisLine={{ stroke: "#374151" }}
                 />
                 <Tooltip
                 contentStyle={{
                   backgroundColor: "rgba(255, 255, 255, 0.98)",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "16px",
+                  borderRadius: windowWidth < 640 ? "12px" : "16px",
                   boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2)",
-                  fontSize: "14px",
-                  padding: "16px 20px",
+                  fontSize: windowWidth < 640 ? "12px" : "14px",
+                  padding: windowWidth < 640 ? "12px 16px" : "16px 20px",
                   backdropFilter: "blur(12px)",
                   zIndex: 1000,
-                  maxWidth: "300px"
+                  maxWidth: windowWidth < 640 ? "250px" : "300px"
                 }}
                 wrapperStyle={{ zIndex: 1000 }}
                 allowEscapeViewBox={{ x: false, y: false }}
@@ -1018,15 +1039,15 @@ const MetricsOverview: React.FC = () => {
 
                   {hasData ? (
                     <>
-                      <div style={{ height: 450 }} className="mb-4">
+                      <div className="h-80 sm:h-96 lg:h-[450px] mb-4">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={chartData}
                             margin={{
                               top: 20,
-                              right: 30,
-                              left: 40,
-                              bottom: 60,
+                              right: windowWidth < 640 ? 15 : 30,
+                              left: windowWidth < 640 ? 20 : 40,
+                              bottom: windowWidth < 640 ? 40 : 60,
                             }}
                           >
                             <CartesianGrid
@@ -1035,13 +1056,13 @@ const MetricsOverview: React.FC = () => {
                             />
                             <XAxis
                               dataKey="segment"
-                              tick={{ fontSize: 12, fill: "#374151" }}
+                              tick={{ fontSize: windowWidth < 640 ? 10 : 12, fill: "#374151" }}
                               axisLine={{ stroke: "#374151" }}
                               tickLine={{ stroke: "#374151" }}
                             />
                             <YAxis
                               domain={[0, 5]}
-                              tick={{ fontSize: 12, fill: "#374151" }}
+                              tick={{ fontSize: windowWidth < 640 ? 10 : 12, fill: "#374151" }}
                               axisLine={{ stroke: "#374151" }}
                               tickLine={{ stroke: "#374151" }}
                             />
@@ -1049,11 +1070,11 @@ const MetricsOverview: React.FC = () => {
                               contentStyle={{
                                 backgroundColor: "rgba(255, 255, 255, 0.98)",
                                 border: "1px solid #e5e7eb",
-                                borderRadius: "12px",
+                                borderRadius: windowWidth < 640 ? "8px" : "12px",
                                 boxShadow:
                                   "0 10px 25px -5px rgba(0, 0, 0, 0.15)",
-                                fontSize: "14px",
-                                padding: "12px 16px",
+                                fontSize: windowWidth < 640 ? "12px" : "14px",
+                                padding: windowWidth < 640 ? "8px 12px" : "12px 16px",
                                 backdropFilter: "blur(8px)",
                                 zIndex: 1000,
                               }}

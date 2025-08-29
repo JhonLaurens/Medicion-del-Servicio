@@ -5,7 +5,8 @@ import SatisfactionTrendChart from '../../../components/SatisfactionTrendChart';
 import DepartmentPerformanceChart from '../../../components/DepartmentPerformanceChart';
 import { StarIcon, TrendUpIcon, UsersIcon, BuildingOfficeIcon } from '../../../components/icons';
 import { satisfactionDataService } from '../../../services/dataService';
-import { ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData, NPSData } from '../../../types';
+import { calculateUnifiedMetrics, calculateSegmentMetrics } from '../../../utils/calculationUtils';
+import { ChartDataPoint, MonthlyTrendData, DepartmentPerformanceData, NPSData, SatisfactionRecord } from '../../../types';
 
 const Dashboard: React.FC = () => {
   const [overallRating, setOverallRating] = useState<number>(0);
@@ -14,16 +15,43 @@ const Dashboard: React.FC = () => {
   const [satisfactionTrend, setSatisfactionTrend] = useState<MonthlyTrendData[]>([]);
   const [departmentPerformance, setDepartmentPerformance] = useState<DepartmentPerformanceData[]>([]);
   const [totalResponses, setTotalResponses] = useState<number>(0);
+  const [rawData, setRawData] = useState<SatisfactionRecord[]>([]);
 
   useEffect(() => {
     const init = async () => {
       await satisfactionDataService.loadData();
-      setOverallRating(satisfactionDataService.getOverallAverageRating());
-      setNpsData(satisfactionDataService.calculateNPS());
-      setRatingDistribution(satisfactionDataService.getRatingDistribution());
-      setSatisfactionTrend(satisfactionDataService.getMonthlyTrend());
-      setDepartmentPerformance(satisfactionDataService.getDepartmentPerformance());
-      setTotalResponses(satisfactionDataService.getTotalResponses());
+      
+      // Obtener datos raw para usar funciones unificadas
+      const data = satisfactionDataService.getRawData();
+      setRawData(data);
+      
+      // Usar funciones unificadas de cálculo para consistencia
+      const unifiedMetrics = calculateUnifiedMetrics(data);
+      
+      // Calcular métricas por segmento
+      const personasMetrics = calculateSegmentMetrics(data, 'PERSONAS');
+      const empresasMetrics = calculateSegmentMetrics(data, 'EMPRESARIAL');
+      
+      // Usar métodos del servicio para datos que no requieren cálculos unificados
+      const distribution = satisfactionDataService.getRatingDistribution();
+      const trend = satisfactionDataService.getMonthlyTrend();
+      const performance = satisfactionDataService.getDepartmentPerformance();
+      const nps = satisfactionDataService.calculateNPS();
+      
+      setOverallRating(unifiedMetrics.averageRating);
+      setNpsData(nps);
+      setRatingDistribution(distribution);
+      setSatisfactionTrend(trend);
+      setDepartmentPerformance(performance);
+      setTotalResponses(unifiedMetrics.totalResponses);
+      
+      console.log('✅ Dashboard: Using unified calculations', {
+        overall: unifiedMetrics.averageRating,
+        nps: nps?.npsScore,
+        totalResponses: unifiedMetrics.totalResponses,
+        personas: personasMetrics.averageRating,
+        empresas: empresasMetrics.averageRating
+      });
     };
     init();
   }, []);
