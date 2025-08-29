@@ -414,7 +414,7 @@ const SuggestionsAnalysis: React.FC = () => {
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Gráfica Circular */}
               <div className="flex justify-center">
-                <div className="w-full h-80 sm:h-96">
+                <div style={{ height: 450 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
                       <Pie

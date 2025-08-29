@@ -137,7 +137,7 @@ const ComparisonChart: React.FC<ComparisonChartProps> = ({ comparisonData, hasVa
           <span className="mr-2">📊</span>
           Métricas por Segmento
         </h3>
-        <div className="h-96 sm:h-80">
+        <div style={{ height: 450 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={comparisonData}

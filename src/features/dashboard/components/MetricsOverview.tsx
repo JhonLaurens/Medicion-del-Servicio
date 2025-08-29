@@ -833,7 +833,7 @@ const MetricsOverview: React.FC = () => {
           </div>
         </div>
 
-          <div className="h-96 sm:h-[28rem]">
+          <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={historicalData}
@@ -1018,7 +1018,7 @@ const MetricsOverview: React.FC = () => {
 
                   {hasData ? (
                     <>
-                      <div className="h-64 sm:h-72 mb-4">
+                      <div style={{ height: 450 }} className="mb-4">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={chartData}

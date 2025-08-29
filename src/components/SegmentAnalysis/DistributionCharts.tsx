@@ -88,7 +88,7 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
             Distribución - Personas
           </h3>
         {personasData.length > 0 ? (
-          <div className="w-full h-80 sm:h-96">
+          <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 30, right: 30, bottom: 50, left: 30 }}>
                 <Pie
@@ -144,7 +144,7 @@ const DistributionCharts: React.FC<DistributionChartsProps> = ({
             Distribución - Empresarial
           </h3>
         {empresasData.length > 0 ? (
-          <div className="w-full h-80 sm:h-96">
+          <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 30, right: 30, bottom: 50, left: 30 }}>
                 <Pie

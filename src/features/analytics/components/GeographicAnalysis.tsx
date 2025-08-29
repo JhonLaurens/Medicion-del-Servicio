@@ -400,7 +400,7 @@ const GeographicAnalysis: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Desglose por Métrica vs. Promedio Nacional</h3>
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg">
-                  <div className="h-96 sm:h-[28rem]">
+                  <div style={{ height: 450 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={prepareChartData(selectedCityData)}

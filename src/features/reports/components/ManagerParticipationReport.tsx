@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { satisfactionDataService } from '../../../services/dataService';
 import ChartErrorBoundary from '../../../components/ChartErrorBoundary';
+import ChartDebugger from '../../../components/ChartDebugger';
 
 interface ManagerData {
   name: string;
@@ -364,11 +365,11 @@ const ManagerParticipationReport: React.FC = () => {
       });
 
       if (filteredData.length > 0) {
-        // Usar los nombres exactos de las columnas del CSV
-        const claridadCol = "En general   ¿La información suministrada en nuestros canales de atención fue clara y fácil de comprender?";
-        const recomendacionCol = "¿Qué tan probable es que usted le recomiende Coltefinanciera a sus colegas   familiares o amigos?";
-        const satisfaccionCol = "En general   ¿Qué tan satisfecho se encuentra con los servicios que le ofrece Coltefinanciera?";
-        const lealtadCol = "Asumiendo que otra entidad financiera le ofreciera al mismo precio los mismos productos y servicios que usted tiene actualmente con Coltefinanciera   ¿Qué tan probable es que usted continúe siendo cliente de Coltefinanciera?";
+        // Usar los nombres mapeados de las columnas (después del procesamiento del servicio)
+        const claridadCol = "claridad_informacion";
+        const recomendacionCol = "recomendacion";
+        const satisfaccionCol = "satisfaccion_general";
+        const lealtadCol = "lealtad";
 
         // Calcular promedios de las métricas con validación mejorada
         const claridadValues = filteredData.map((r) => parseFloat(r[claridadCol])).filter((v) => !isNaN(v) && v >= 1 && v <= 5);
@@ -837,13 +838,13 @@ const ManagerParticipationReport: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Gráfico de Barras Principal */}
+                <div className="space-y-8">
+                  {/* Gráfico de Barras Principal - Ancho completo */}
                   <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       📈 <span className="ml-2">Métricas de Satisfacción</span>
                     </h4>
-                    <div style={{ height: 400 }}>
+                    <div style={{ height: 450 }}>
                       <ChartErrorBoundary componentName="Gráfico de Estadísticas por Filtro">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
@@ -922,12 +923,12 @@ const ManagerParticipationReport: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Gráfico Circular de Distribución */}
+                  {/* Gráfico Circular de Distribución - Ancho completo */}
                   <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       🥧 <span className="ml-2">Distribución de Encuestas</span>
                     </h4>
-                    <div style={{ height: 400 }}>
+                    <div style={{ height: 450 }}>
                       <ChartErrorBoundary componentName="Gráfico Circular de Distribución">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
@@ -968,12 +969,12 @@ const ManagerParticipationReport: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Gráfico de Comparación de Rendimiento */}
-                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 lg:col-span-2">
+                  {/* Gráfico de Comparación de Rendimiento - Ancho completo */}
+                  <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       🎯 <span className="ml-2">Comparación de Rendimiento General</span>
                     </h4>
-                    <div style={{ height: 350 }}>
+                    <div style={{ height: 450 }}>
                       <ChartErrorBoundary componentName="Gráfico de Comparación">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
@@ -1333,6 +1334,9 @@ const ManagerParticipationReport: React.FC = () => {
         </div>
       </div>
       </div>
+      
+      {/* Temporary Debug Component */}
+      <ChartDebugger />
     </div>
   );
 };

@@ -77,7 +77,7 @@ const ImprovedDistributionChart: React.FC<ImprovedDistributionChartProps> = ({
       </div>
 
       {/* Gráfico de barras agrupadas */}
-      <div className="h-80 sm:h-96 mb-4">
+      <div style={{ height: 450 }} className="mb-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
